@@ -3,34 +3,34 @@ import nltk
 # nltk.download('punkt')
 from nltk.stem.porter import PorterStemmer
 stemmer = PorterStemmer()
-
-
+from nltk.stem.snowball import SnowballStemmer
+snow_stemmer = SnowballStemmer(language='portuguese')
 def tokenize(sentence):
     """
-    split sentence into array of words/tokens
-    a token can be a word or punctuation character, or number
+    dividir a frase em um conjunto de palavras/tokens
+    um token pode ser uma palavra, um caractere de pontuação ou um número
     """
     return nltk.word_tokenize(sentence)
 
 
 def stem(word):
     """
-    stemming = find the root form of the word
+    derivação = encontre a forma raiz da palavra
     examples:
-    words = ["organize", "organizes", "organizing"]
+    words = ["organizar", "organiza", "organizando"]
     words = [stem(w) for w in words]
     -> ["organ", "organ", "organ"]
     """
-    return stemmer.stem(word.lower())
+    return snow_stemmer.stem(word)
 
 
 def bag_of_words(tokenized_sentence, words):
     """
-    return bag of words array:
-    1 for each known word that exists in the sentence, 0 otherwise
+    retornar conjunto de palavras:
+    1 para cada palavra conhecida que existe na frase, 0 caso contrário
     example:
-    sentence = ["hello", "how", "are", "you"]
-    words = ["hi", "hello", "I", "you", "bye", "thank", "cool"]
+    sentence = ["oi", "como", "voce", "esta"]
+    words = ["oi", "ola", "eu", "voce", "tchau", "obrigado", "legal"]
     bog   = [  0 ,    1 ,    0 ,   1 ,    0 ,    0 ,      0]
     """
     # stem each word

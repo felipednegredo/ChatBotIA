@@ -9,29 +9,29 @@ from torch.utils.data import Dataset, DataLoader
 from nltk_utils import bag_of_words, tokenize, stem
 from model import NeuralNet
 
-with open('intents.json', 'r') as f:
+with open('intents.json', 'r', encoding='utf8') as f:
     intents = json.load(f)
 
 all_words = []
 tags = []
 xy = []
-# loop through each sentence in our intents patterns
+# percorrer cada frase em nossos padrões de intenções
 for intent in intents['intents']:
     tag = intent['tag']
-    # add to tag list
+    # adicionar à lista de tags
     tags.append(tag)
     for pattern in intent['patterns']:
-        # tokenize each word in the sentence
+        # tokenizar cada palavra na frase
         w = tokenize(pattern)
-        # add to our words list
+        # adicione à nossa lista de palavras
         all_words.extend(w)
-        # add to xy pair
+        # adicionar ao par xy
         xy.append((w, tag))
 
-# stem and lower each word
-ignore_words = ['?', '.', '!']
+# radical e inferior de cada palavra
+ignore_words = ['?', '.', '!', ',']
 all_words = [stem(w) for w in all_words if w not in ignore_words]
-# remove duplicates and sort
+# remover duplicatas e sort
 all_words = sorted(set(all_words))
 tags = sorted(set(tags))
 
@@ -39,7 +39,7 @@ print(len(xy), "patterns")
 print(len(tags), "tags:", tags)
 print(len(all_words), "unique stemmed words:", all_words)
 
-# create training data
+# criar dados de treinamento
 X_train = []
 y_train = []
 for (pattern_sentence, tag) in xy:

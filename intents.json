@@ -1,84 +1,686 @@
 {
   "intents": [
     {
-      "tag": "greeting",
+      "tag": "oi",
       "patterns": [
-        "Hi",
+        "Oi",
+        "Ola",
+        "E aí",
+        "Opa",
         "Hey",
-        "How are you",
-        "Is anyone there?",
-        "Hello",
-        "Good day"
+        "Tudo bem?",
+        "Como vai?",
+        "Bom dia",
+        "Boa tarde",
+        "Boa noite"
       ],
       "responses": [
-        "Hey :-)",
-        "Hello, thanks for visiting",
-        "Hi there, what can I do for you?",
-        "Hi there, how can I help?"
+        "Olá! Eu sou um bot do IFRS Sertão, aqui para ajudar você, aluno. Como posso ser útil hoje?",
+        "Oi!&#128512 Sou o chatbot do IFRS Sertão, estou à disposição para auxiliar você, aluno.",
+        "Hey, aluno! Sou o bot do IFRS Sertão, prontinho para te auxiliar. &#128512"
       ]
     },
     {
-      "tag": "goodbye",
-      "patterns": ["Bye", "See you later", "Goodbye"],
+      "tag": "tchau",
+      "patterns": ["tchau", "até mais", "adeus", "falou", "bye"],
       "responses": [
-        "See you later, thanks for visiting",
-        "Have a nice day",
-        "Bye! Come back again soon."
+        "Se precisar de mais ajuda, você sabe onde me encontrar. Tenha um ótimo dia &#128517",
+        "Não hesite em voltar se tiver mais perguntas. Até mais! &#128517",
+        "Estou sempre aqui para auxiliar. Até a próxima!"
       ]
     },
     {
-      "tag": "thanks",
-      "patterns": ["Thanks", "Thank you", "That's helpful", "Thank's a lot!"],
-      "responses": ["Happy to help!", "Any time!", "My pleasure"]
+      "tag": "Obrigado",
+      "patterns": ["Obrigado", "Muito obrigado", "valeu", "obrigadissimo","valeu demais","obrigadao" ],
+      "responses": ["Eu quem agradeço! &#128517", "Foi um prazer! &#128517 Sempre que precisar estou aqui", "Foi um prazer ser útil!"]
     },
     {
-      "tag": "items",
+      "tag": "nao_encontrada",
       "patterns": [
-        "Which items do you have?",
-        "What kinds of items are there?",
-        "What do you sell?"
+        "fsdfdsf",
+        "kkkkkkkk",
+        "dsadsadcx",
+        "sasvc",
+        "aaaaaa",
+        "bbbbbbb",
+        "sasadas",
+        "slacxvcx",
+        "%¨$#$¨$¨$(*&#&",
+        "###$#%%$¨@!#",
+        "$¨$@(#)%*&%¨!",
+        "qqqqq",
+        "ytyuyt",
+        ",xcx,bvcb",
+        "teyotrtefv",
+        "asavcvnbmnmbn,fgdtrjrt",
+        "retretertertretre",
+        "lllllll",
+        "cccccc",
+        "zzzzzzz",
+        "gggggg",
+        "mmmmmmmm",
+        "nnnnn",
+        "cvvbcxewqgfytr"
+
       ],
       "responses": [
-        "We sell coffee and tea",
-        "We have coffee and tea"
+        "Desculpe, não entendi sua pergunta ou ela não está contemplada nesta interação. Você pode reformular de outra maneira ou utilizar a barra de pesquisa."
+
       ]
     },
     {
-      "tag": "payments",
+      "tag": "horario",
       "patterns": [
-        "Do you take credit cards?",
-        "Do you accept Mastercard?",
-        "Can I pay with Paypal?",
-        "Are you cash only?"
+        "Qual é o meu horário de aula para hoje?",
+        "Onde posso encontrar meu horário de aula?",
+        "Quero ver os horários das aulas",
+        "Horários de aulas",
+        "Onde é minha aula?",
+        "Onde encontro o horário de aula do meu curso?",
+        "Onde é minha sala de aula?",
+        "Onde encontro minha sala e meus horários de aula?",
+        "Sala de aula",
+        "Quero saber onde é minha sala de aula",
+        "Meus horarios",
+        "horario da aula",
+        "quero ver horario das minhas aulas",
+        "onde está o horario das aulas"
       ],
-      "responses": [
-        "We accept VISA, Mastercard and Paypal",
-        "We accept most major credit cards, and Paypal"
-      ]
+      "responses": ["Você pode acessar os horários de aulas e salas no link disponível. &#128336", "Os horários &#128336 de aula estão disponíveis aqui."],
+        "link": " <a target='_blank' href='https://docs.google.com/spreadsheets/d/1GFXNYECZD4SE8iuKOmKRMJ4-a6AvE8oqezhNz7JuGOo/edit#gid=1534071294'>Link para os horários de aula </a>"
     },
     {
-      "tag": "delivery",
+      "tag": "calendario_academico_superior",
       "patterns": [
-        "How long does delivery take?",
-        "How long does shipping take?",
-        "When do I get my delivery?"
+        "Quando começa o próximo semestre letivo da faculdade?",
+        "Quero ver o calendário acadêmico do ensino superior",
+        "Calendário acadêmico ensino superior",
+        "Quando é o recesso para o ensino superior?",
+        "Quais são as datas importantes no calendário acadêmico superior da instituição para este ano?",
+        "Quais os feriados para o ensino superior?",
+        "Gostaria de cer o calendario ensino superior",
+        "Calendário superior",
+        "Calendário acadêmico deste ano",
+        "Calendario academico do ensino superior para este ano",
+        "Quais as datas importantes para o ensino superior"
+
       ],
-      "responses": [
-        "Delivery takes 2-4 days",
-        "Shipping takes 2-4 days"
-      ]
+      "responses": ["Aqui está o calendário acadêmico dos cursos superiores &#128198: ", "Você pode acessar o calêndario acadêmico do ensino superior aqui &#128198.<br>"],
+        "link": " <a target='_blank' href='https://ifrs.edu.br/sertao/wp-content/uploads/sites/7/2023/09/Calendario-Academico-2023-Cursos-superiores-subsequente-PROEJA-e-Pos-Atualizado-em-13-09-2023-1.pdf'>Link calendário acadêmico ensino superior </a>"
+    }
+    ,
+    {
+      "tag": "calendario_academico_integrado_ou_médio",
+      "patterns": [
+        "Quando começam as aulas do ensino médio este ano?",
+        "Quando começam as aulas do ensino integrado?",
+        "quero ver o calendario do ensino médio",
+        "Calendário acadêmico ensino médio ou integrado",
+        "Quero ver o calendário acadêmico do ensino integrado",
+        "Quais são as datas importantes no calendário acadêmico do ensino médio para este semestre?",
+        "Quais os feriados para o ensino médio?",
+        "Gostaria de ver o calendario médio",
+        "Ver calendário acadêmico do ensino médio e integrado",
+        "Calendário acadêmico ensino integrado",
+        "Calendário do ensino integrado",
+        "Mostre o calendário acadêmico do ensino médio",
+        "Calendário ensino médio",
+        "Calendário integrado",
+        "Calendario integrado",
+        "Calendario médio",
+        "calendário médio",
+        "calendario medio"
+
+      ],
+      "responses": ["Aqui está o calendário acadêmico para os cursos integrados &#128198:<br>", "O calendário &#128198 do ensino integrado pode ser acessado no link a seguir.<br>","Acesse o calendário acadêmico do ensino integrado aqui &#128198.<br>"],
+        "link": " <a target='_blank' href='https://ifrs.edu.br/sertao/wp-content/uploads/sites/7/2023/09/Calendario-Academico-de-2023-Integrado-Atualizado-em-13-09-2023-4.pdf'>Link calendário acadêmico ensino integrado </a>"
     },
     {
-      "tag": "funny",
+      "tag": "esclarecer_calendario",
       "patterns": [
-        "Tell me a joke!",
-        "Tell me something funny!",
-        "Do you know a joke?"
+        "calendario",
+        "Calendário",
+        "Quero ver o calendário",
+        "calendario do ano",
+        "feriados do ano",
+        "Quero ver os feriados do ano",
+        "Quero ver o calendário do ano"
       ],
-      "responses": [
-        "Why did the hipster burn his mouth? He drank the coffee before it was cool.",
-        "What did the buffalo say when his son left for college? Bison."
-      ]
+      "responses": ["Você quer ver o calendário acadêmico do ensino integrado ou do ensino superior?<br> Digite uma das opções:<br><strong> Calendário integrado</strong> ou <strong>Calendário superior</strong>"]
+    },
+    {
+      "tag": "esclarecer_horarios",
+      "patterns": [
+        "horário",
+        "horario",
+        "quero ver horário",
+        "mostre horarios",
+        "quais os horarios",
+        "gostaria de saber os horários",
+        "horario",
+        "hora",
+        "quero ver os horários"
+
+      ],
+      "responses": ["Você gostaria de saber qual informação? Horários do restaurante ou horários de aula?<br> Digite uma das opções: <br><strong>Horários do restaurante</strong> ou <strong>Horários de aula</strong>"]
+    },
+    {
+      "tag": "horarios_restaurante",
+      "patterns": [
+        "Quais são os horários do café da manhã no restaurante?",
+        "A que horas o almoço é servido no restaurante estudantil hoje?",
+        "Quando começa o jantar no restaurante estudantil?",
+        "Pode me informar os horários das refeições para o restaurante?",
+        "Qual o horário da janta?",
+        "Que horas é o almoço?",
+        "Quero ver os horários do restaurante",
+        "Horários refeições",
+        "Horários do restaurante",
+        "horario do restaurante",
+        "hora do restaurante",
+        "hora janta",
+        "hora almoço",
+        "hora café da manhã"
+      ],
+      "responses": ["Horário das Refeições:<br> <strong>Café da manhã: 6h45min às 8h<br><br>  Almoço: 11h45min às 13h<br><br> Lanche: 14h50min às 15h10min<br><br> Jantar: 18h30min às 19h30min</strong>"]
+    },
+    {
+      "tag": "cardapio",
+      "patterns": [
+        "Quais são os horários do café da manhã no restaurante?",
+        "Qual é o cardápio do almoço para amanhã no restaurante?",
+        "Qual o cardápio de hoje?",
+        "Qual a janta de hoje?",
+        "Qual o café da manhã?",
+        "O que tem de refeição?",
+        "Cardápio da semana",
+        "cardapio",
+        "cardápio",
+        "Qual a refeição de amanhã?",
+        "O que será servido no refeitório?",
+        "refeitorio",
+        "refeitório",
+        "Refeições de hoje",
+        "Refeições da semana",
+        "comidas da semana",
+        "o que vai ter pra comer na semana"
+      ],
+      "responses": [" "],
+      "link": "<a target='_blank' href='https://ifrs.edu.br/sertao/assistencia-estudantil/restaurante/cardapio/'><img src='https://ifrs.edu.br/sertao/wp-content/uploads/sites/7/2023/11/CARDAPIO-SEMANAL-2.png' width='400' height='300'></a>"
+    },
+    {
+      "tag": "reserva_restaurante",
+      "patterns": [
+        "Como faço para fazer uma reserva no restaurante estudantil?",
+        "Quero fazer uma reserva no restaurante",
+        "Reserva restaurante",
+        "Quero fazer reserva no restaurante estudantil",
+        "Onde faço a reserva no restaurante?",
+        "Fazer reserva para almoço e janta",
+        "Fazer reserva no restaurante estudantil para o almoço",
+        "Como faço reserva para jantar no restaurante?",
+        "Reservar almoço",
+        "Fazer reserva no restaurante",
+        "Marcar reserva no restaurante estudantil",
+        "reserva"
+      ],
+      "responses": ["Você pode fazer sua reserva no restaurante através do seguinte link:<br><br>"],
+      "link": "<a target='_blank' href='https://docs.google.com/forms/d/e/1FAIpQLSeEeIW4LmOQtWCkGIIbfqDcraoByTM6KbKajYAwPmig2Yo9Sg/viewform'>Link para fazer reserva no restaurante estudantil</a>"
+    },
+    {
+      "tag": "esclarecer_restaurante",
+      "patterns": [
+        "restaurante",
+        "Ver restaurante",
+        "opções do restaurante",
+        "restaurante estudantil",
+        "comer no restaurante",
+        "mostrar restaurante"
+
+
+      ],
+      "responses": ["Você gostaria de acessar qual informação? Horários do Restaurante ou fazer Reserva no Restaurante?<br> Digite uma das opções: <br><strong>Horários do restaurante</strong> ou <strong>Reserva restaurante</strong>"]
+    },
+    {
+      "tag": "campus_digital",
+      "patterns": [
+        "Como faço para acessar o Campus Digital?",
+        "Quero acessar o campus digital",
+        "Campus digital",
+        "Acessar campus digital",
+        "Onde acesso o sistema do Campus Digital?",
+        "Onde fica o campus digital?",
+        "Mostre o campus digital",
+        "Quero ver minhas notas no Campus Digital",
+        "entrar no campus digital"
+
+      ],
+      "responses": ["Acesse suas notas e frequências no Campus Digital &#128187. O link direto para a plataforma é:<br><br>"],
+      "link": "<a target='_blank' href='https://campusdigital.sertao.ifrs.edu.br/public/login/index.xhtml?windowId=1db'>Acesse o Campus Digital</a>"
+    },
+    {
+      "tag": "Sigaa",
+      "patterns": [
+        "Como ver minhas notas no SigaA?",
+        "Como acessar o boletim no SigaA?",
+        "Como faço para acessar o SigaA?",
+        "Quero acessar o SigaA",
+        "Acessar o SigaA",
+        "Onde acesso o SigaA?",
+        "Mostre o site do SigaA",
+        "Onde fica o SigaA?",
+        "SigaA notas",
+        "Quero ver minhas notas no SigaA",
+        "Sigaa acesso",
+        "SigaA",
+        "sigaA",
+        "Ver o sigaA",
+        "SigaA informações",
+        "Como entro no SigaA",
+        "SigaA acadêmico"
+
+
+      ],
+      "responses": ["Você pode acessar a plataforma do SigaA &#128187 através do link:<br><br>"],
+      "link": "<a target='_blank' href='https://sig.ifrs.edu.br/sigaa/verTelaLogin.do;jsessionid=4855C4C342F00F4FDF39FB76D340AAEE.node1'>Acesse o SigaA</a>"
+    },
+    {
+      "tag": "Moodle",
+      "patterns": [
+        "Onde encontro os recursos de ensino no Moodle?",
+        "Link do Moodle",
+        "Quero acessar o Moodle",
+        "Como faço para acessar o Moodle?",
+        "Acessar o Moodle",
+        "Onde entro no Moodle?",
+        "Entrar no Moodle",
+        "Onde fica o Moodle?",
+        "Como ter acesso às atividades e testes no Moodle?",
+        "moodle",
+        "aulas no moodle",
+        "Matérias do moodle",
+        "ver moodle",
+        "me leve para o moodle",
+        "o que é moodle?",
+        "como entro no moodle?"
+
+
+      ],
+      "responses": ["O Moodle é uma plataforma de ensino online &#128187. O link direto para o Moodle é:<br><br>"],
+      "link": "<a target='_blank' href='https://moodle.sertao.ifrs.edu.br/'>Acesse o Moodle!</a>"
+    },
+    {
+      "tag": "biblioteca_virtual",
+      "patterns": [
+        "Como faço para acessar a biblioteca virtual da instituição?",
+        "Como acesso a biblioteca virtual?",
+        "Acessar biblioteca virtual",
+        "Quero utilizar a biblioteca virtual",
+        "Quais recursos eletrônicos estão disponíveis na biblioteca virtual?",
+        "Posso acessar artigos acadêmicos e e-books online na biblioteca virtual?",
+        "Biblioteca virtual acesso",
+        "Acessar o Pergamum",
+        "Pergamun reservar livros",
+        "Consultar acervo de livros",
+        "fazer reserva de livros",
+        "ver livros da biblioteca",
+        "quais os livros disponiveis virtualmente",
+        "livros da biblioteca Pergamum",
+        "pergamum",
+        "pergamum biblioteca",
+        "acesso biblioteca pergamum"
+
+
+      ],
+      "responses": ["Você pode acessar a biblioteca virtual &#128214 <strong>Pergamum</strong através do seguinte link. Basta fazer login com suas credenciais de aluno.<br><br>"],
+      "link": "<a target='_blank' href='https://biblioteca.ifrs.edu.br/pergamum_ifrs/biblioteca/index.php'>Acesse a biblioteca Pergamum!</a>"
+    },
+    {
+      "tag": "renovar_livros",
+      "patterns": [
+        "Quanto tempo posso ficar com os livros?",
+        "Tempo para devolver os livros?",
+        "Quando devolver livros?",
+        "Tempo de devolver livros?",
+        "Ficar quanto tempo com o livro?",
+        "tempo para renovar livros",
+        "renovar livros",
+        "renovação dos livros",
+        "livros para renovar",
+        "prazo renovar",
+        "prazo para renovar livros"
+
+      ],
+      "responses": ["O período de reserva é de até <strong>sete dias</strong> e pode ser renovado até dez vezes &#128214.</br> OBS:Lembrando que os empréstimos e renovações só serão possíveis se o leitor estiver regularizado junto a Biblioteca."]
+
+    },
+    {
+      "tag": "devolver_livros",
+      "patterns": [
+        "devolução de livros",
+        "livros para devolvução",
+        "tempo com livros",
+        "livros para serem devolvidos",
+        "entregar livros",
+        "livros devolta para a biblioteca",
+        "Esqueci de renovar o livro",
+        "Não renovei os livros",
+        "Devolver livros",
+        "Não devolvi o livro",
+        "Multa de atraso devolução",
+        "Devolução de livros",
+        "prazo para devolver livros",
+        "prazo livro",
+        "Esqueci de devolver os livros, e agora?"
+      ],
+      "responses": ["Você deve devolver o livro à biblioteca o mais breve possível &#128217, pois a multa é no valor de <strong>R$ 1,00 (um real)</strong> por dia de atraso."]
+
+    },
+    {
+      "tag": "tipos_auxilio",
+      "patterns": [
+        "Quais tipos de auxílios estudantis estão disponíveis na instituição?",
+        "Quais são os critérios de elegibilidade para receber auxílios estudantis?",
+        "Como faço para solicitar auxílio estudantil?",
+        "Quais são os prazos para a inscrição nos programas de auxílio estudantil?",
+        "Posso receber auxílio para despesas de moradia e alimentação?",
+        "Quais são os tipos de auxílios estudantis?",
+        "tipos auxilio?",
+        "quais os auxilios estudantis?",
+        "quais são os auxilios",
+        "quero auxílio",
+        "quero receber auxilio estudantil",
+        "quais os possiveis auxílios estudantis",
+        "quero o saber quais os tipos de auxilio"
+
+
+
+      ],
+      "responses": ["Os tipos de auxílios estudantis são: <strong>Auxílio Permanência</strong> e <strong>Auxílio Moradia</strong>.</br> Seus objetivos são subsidiar as despesas dos estudantes beneficiários do auxílio […], com vistas a ampliar suas condições de permanência e êxito acadêmico.</br>"],
+      "link": "<a target='_blank' href='https://ifrs.edu.br/sertao/assistencia-estudantil/programa-de-beneficios/sobre-os-auxilios-estudantis/'>Mais informações!</a>"
+    },
+    {
+      "tag": "edital_auxilio",
+      "patterns": [
+        "Onde posso encontrar os editais para solicitar auxílios estudantis?",
+        "Quando são geralmente divulgados os editais de auxílios estudantis?",
+        "Quais são os requisitos específicos listados nos editais para cada tipo de auxílio?",
+        "Quais documentos são necessários para se candidatar aos auxílios estudantis?",
+        "Quero ver o edital de auxílio estudantil",
+        "Acessar edital auxílio estudantil",
+        "Inscrição auxílio estudantil",
+        "edital auxlio estudantil",
+        "quero ver o edital dos auxilios",
+        "edital dos auxílios estudantis",
+        "edital auxílio permanencia",
+        "edital auxilio moradia"
+
+
+      ],
+      "responses": ["Aqui está o acesso ao edital de auxílio estudantil. Lá, você encontrará informações detalhadas sobre os requisitos, prazos de inscrição e procedimentos de candidatura.</br>"],
+      "link": "<a target='_blank' href='https://ifrs.edu.br/sertao/assistencia-estudantil/programa-de-beneficios/editais/'>Acesse o edital geral!</a>"
+    },
+    {
+      "tag": "mapa",
+      "patterns": [
+        "Onde posso encontrar um mapa detalhado do campus?",
+        "Quais são os principais pontos de interesse no campus?",
+        "Quero ver as instalações da instituição",
+        "Mapa do campus",
+        "Quero conhecer o campus",
+        "Ver TourIFRS",
+        "Gostaria de ver um mapa do campus",
+        "Setores da instituição",
+        "Quero ver os setores do campus",
+        "Conhecendo a instituição",
+        "fazer tour",
+        "tour",
+        "mapa",
+        "mapa campus",
+        "Olhar mapa",
+        "Tour",
+        "conhecer campus"
+
+
+      ],
+      "responses": ["Você pode explorar o nosso campus virtualmente através de um tour interativo. &#128506 </br></br>"],
+      "link": "<a target='_blank' href='https://tour.sertao.ifrs.edu.br/'>Tour IFRS</a>"
+    },
+    {
+      "tag": "notas",
+      "patterns": [
+        "Notas",
+        "Quero ver minhas notas",
+        "Onde posso ver notas?",
+        "Gostaria de ver minhas notas",
+        "onde vejo notas?",
+        "notas das disciplinas"
+
+
+      ],
+      "responses": ["Você pode ver suas notas em um dos portais. &#128204</br></br>"],
+      "link": "<a target='_blank' href='https://campusdigital.sertao.ifrs.edu.br/public/login/index.xhtml?windowId=5eb'>Campus digital</a></br> ou <a target='_blank' href='https://sig.ifrs.edu.br/sigaa/verTelaLogin.do;jsessionid=0CDB1EFBB1325CDA44A4A7B6D0B935DD.node1'>Sigaa</a>"
+    },
+    {
+      "tag": "faltas",
+      "patterns": [
+        "Faltas",
+        "Quero ver faltas",
+        "Onde posso ver quantidade de faltas?",
+        "Gostaria de ver minhas faltas",
+        "onde vejo faltas?",
+        "faltas nas disciplinas",
+        "faltas nas materias",
+        "quantas faltas tenho"
+
+
+
+      ],
+      "responses": ["Você pode acompanhar suas faltas nos sistemas a seguir! &#128206 </br></br>"],
+      "link": "<a target='_blank' href='https://campusdigital.sertao.ifrs.edu.br/public/login/index.xhtml?windowId=5eb'>Campus digital</a></br> ou <a target='_blank' href='https://sig.ifrs.edu.br/sigaa/verTelaLogin.do;jsessionid=0CDB1EFBB1325CDA44A4A7B6D0B935DD.node1'>Sigaa</a>"
+    },
+    {
+      "tag": "matérias_disciplinas",
+      "patterns": [
+        "matérias",
+        "materias",
+        "quero ver minhas matérias",
+        "mostre as materias",
+        "quais materias tenho no semestre?",
+        "que matérias vou ter agora?",
+        "matérias que estou matriculado?",
+        "disciplinas",
+        "Disciplina",
+        "quero ver minhas disciplinas",
+        "mostre as disciplinas",
+        "quais disciplinas tenho no semestre?",
+        "que disciplinas vou ter agora?",
+        "disciplinas que estou matriculado?"
+      ],
+      "responses": ["Para visualizar as disciplinas &#128212, você pode acompanhar diretamente no seguinte ambiente virtual:</br>"],
+      "link": "<a target='_blank' href='https://moodle.sertao.ifrs.edu.br/'>Moodle</a>"
+    },
+    {
+      "tag": "cursos",
+      "patterns": [
+        "Quais os cursos a instituição oferece?",
+        "Quero ver informações sobre os cursos",
+        "Lista de cursos da instituição",
+        "Quero ver os cursos de ensino superior",
+        "Quero ver os cursos de ensino médio ou integrado",
+        "Quero ver os cursos de Pós-graduação",
+        "Cursos disponíveis",
+        "Informações dos cursos",
+        "Quais os tipos de cursos a instituição oferece?",
+        "Quais as modalidades de cursos?",
+        "cursos",
+        "cursos ensino médio",
+        "curso ads",
+        "curso agropecuaria",
+        "curso pós-graduação",
+        "cursos da instituição",
+        "curso agronomia",
+        "curso zootecnia",
+        "curso manutenção e suporte em informática",
+        "curso biologia",
+        "curso agronegócio",
+        "ensino médio",
+        "ads",
+        "agropecuaria",
+        "pós-graduação",
+        "agronomia",
+        "zootecnia",
+        "manutenção e suporte em informática",
+        "biologia",
+        "agronegócio",
+        "quero ver os cursos",
+        "quero ver cursos",
+        "mostrar cursos"
+
+      ],
+      "responses": ["É oferecido uma ampla gama de cursos de <strong>graduação, pós-graduação e ensinos integrados</strong> para atender às diversas necessidades acadêmicas dos nossos alunos.</br>Acesse para mais informações. &#128209</br>"],
+      "link": "<a target='_blank' href='https://ifrs.edu.br/sertao/cursos/'>Veja mais informações dos cursos!</a>"
+    },
+
+    {
+      "tag": "projeto_pesquisa",
+      "patterns": [
+        "Quais são os projetos de ensino em andamento na instituição?",
+        "Como posso me inscrever em projetos de ensino?",
+        "Onde posso encontrar informações sobre cursos especiais ou projetos de ensino no próximo semestre?",
+        "Quero ver os projetos de ensino",
+        "Projetos de ensino disponíveis",
+        "Informações projetos de ensino",
+        "projetos de pesquisa",
+        "pesquisa",
+        "quero ver projetos de pesquisa",
+        "Acessar projetos de pesquisa",
+        "quais projetos de pesquisa tem?",
+        "projeto pesquisa",
+        "mostre os projetos de pesquisa"
+
+      ],
+      "responses": ["Para ver informações ou se inscrever em projetos de pesquisa &#128208, você pode verificar as oportunidades disponíveis em:</br>"],
+      "link": "<a target='_blank' href='https://ifrs.edu.br/sertao/pesquisa-pos-graduacao-e-inovacao/editais/'>Veja as oportunidades!</a>"
+    },
+    {
+      "tag": "projeto_extensão",
+      "patterns": [
+        "extensão",
+        "extensao",
+        "Quais são os projetos de extensão que a instituição está promovendo?",
+        "Como posso me tornar voluntário em projetos de extensão?",
+        "Onde posso encontrar informações sobre os projetos de extensão?",
+        "Como posso me inscrever em projetos de extensão?",
+        "Quero ver os projetos de extensão",
+        "Informações projetos de extensão",
+        "Projetos de extensão",
+        "Quais são os projetos de extensão disponíveis?",
+        "projetos de extensao disponiveis",
+        "extensão disponiveis",
+        "Extensão",
+        "inscrever-se projeto extensão",
+        "acessar projeto extensão"
+
+
+      ],
+      "responses": ["A instituição está comprometida com projetos de extensão que beneficiem nossa comunidade. Para obter informações sobre os projetos de extensão em andamento ou como participar &#128221, você pode visitar:</br>"],
+      "link": "<a target='_blank' href='https://ifrs.edu.br/sertao/extensao/diretoria-de-extensao/'>Veja mais informações!</a>"
+    },
+    {
+      "tag": "projeto_ensino",
+      "patterns": [
+        "ensino",
+        "Ensino",
+        "Quais são os projetos de ensino que a instituição está promovendo?",
+        "Como posso me tornar voluntário em projetos de ensino?",
+        "participar projetos de ensino",
+        "Onde posso encontrar informações sobre os projetos de ensino?",
+        "informações projetos de ensino",
+        "Como posso me inscrever em projetos de ensino?",
+        "Quero ver os projetos de ensino",
+        "Informações projetos de ensino",
+        "Projetos de ensino",
+        "Quais são os projetos de ensino disponíveis?",
+        "projetos de ensino disponiveis",
+        "ensino disponiveis",
+        "Acessar projetos ensino",
+        "inscrever-se projeto ensino",
+        "acessar projeto ensino"
+
+
+      ],
+      "responses": ["Os projetos de Ensino da instituição são diversificados e abrangem uma ampla gama de áreas acadêmicas &#128218. Acesse o link abaixo para ver <strong>projetos de ensino</strong> desenvolvidos e acessar mais informações:</br>"],
+      "link": "<a target='_blank' href='https://ifrs.edu.br/sertao/ensino/projetos-de-ensino-2/'>Veja mais informações!</a>"
+    },
+    {
+      "tag": "esclarecer_projetos",
+      "patterns": [
+        "projetos",
+        "quero ver os projetos",
+        "opções de projetos",
+        "Quais os projetos que a instituição oferece",
+        "projetos disponiveis",
+        "todos os projetos",
+        "mostrar projetos",
+        "projetos da instituição",
+        "projetos que posso participar no IFRS",
+        "informações sobre os projetos",
+        "inforamção projetos"
+
+
+      ],
+      "responses": ["Você está falando sobre qual projeto? &#128201 Projetos pesquisa, Projetos de extensão ou Projetos de ensino?<br> Digite uma das opções: <br><strong>Projeto pesquisa</strong>,<br><strong>Projeto extensão</strong>,<br><strong>Projeto ensino</strong>"]
+    },
+    {
+      "tag": "residentes",
+      "patterns": [
+        "Como faço para me candidatar a uma vaga na residência estudantil?",
+        "residentes",
+        "residir",
+        "morar na instituição",
+        "morar",
+        "residencial",
+        "Quais são os custos associados à residência estudantil?",
+        "Qual é a política de segurança na residência estudantil?",
+        "Como funciona a residência estudantil?",
+        "O que é a residência estudantil?",
+        "Como solicitar a residência estudantil?",
+        "Quais são os custos associados à residência estudantil?",
+        "Perguntas residência",
+        "Quais são os critérios para morar na residência estudantil?",
+        "Como são feitas as atribuições de quartos na residência estudantil?",
+        "residência",
+        "Residência estudantil",
+        "o que é residência estudantil",
+        "Semirresidência",
+        "Semirresidência estudantil"
+
+
+      ],
+      "responses": ["Entende-se por Residência Estudantil o local disponibilizado pela Instituição para a residência do/a estudante no Campus e por Semirresidência Estudantil o local disponibilizado pela Instituição onde o/a estudante pode realizar sua higiene pessoal e a guarda de pertences. &#128716</br> Você pode acessar mais informações através de:</br>"],
+      "link": "<a target='_blank' href='https://ifrs.edu.br/sertao/assistencia-estudantil/residencia-e-semirresidencia-estudantil/sobre-a-residencia-e-semirresidencia/'>Mais informações!</a>"
+    },
+    {
+      "tag": "editais",
+      "patterns": [
+        "Como posso encontrar os editais atuais da instituição?",
+        "Onde estão disponíveis os editais para os processos seletivos?",
+        "Onde posso obter informações detalhadas sobre os requisitos de cada edital?",
+        "Como faço para me inscrever em um processo seletivo de um edital?",
+        "Quais são os documentos necessários para a inscrição nos editais?",
+        "O que fazer em caso de dúvidas sobre um edital específico?",
+        "editais da instituição",
+        "quero ver os editais",
+        "acessar os editais do ifrs",
+        "ediais disponiveis",
+        "todos os editais",
+        "editais",
+        "edital"
+
+      ],
+      "responses": ["Os editais atuais da instituição podem ser encontrados na seção 'Editais' do site! &#128194</br></br>"],
+      "link": "<a target='_blank' href='https://ifrs.edu.br/sertao/editais/'>Acesse todos os editais disponíveis!</a>"
     }
   ]
 }

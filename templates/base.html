@@ -7,28 +7,30 @@
     <title>Chatbot</title>
 </head>
 <body>
+<img width="100%" height="100%" src="{{ url_for('static', filename='images/tela3.png') }}" alt="image">
 <div class="container">
+
     <div class="chatbox">
         <div class="chatbox__support">
             <div class="chatbox__header">
                 <div class="chatbox__image--header">
-                    <img src="https://img.icons8.com/color/48/000000/circled-user-female-skin-type-5--v1.png" alt="image">
+                    <img width="65px" height="60px" src="{{ url_for('static', filename='images/bot.png') }}" alt="image">
                 </div>
                 <div class="chatbox__content--header">
-                    <h4 class="chatbox__heading--header">Chat support</h4>
-                    <p class="chatbox__description--header">Hi. My name is Sam. How can I help you?</p>
+                    <h4 class="chatbox__heading--header">Chatbot IFRS</h4>
+                    <p class="chatbox__description--header">Olá estudante. Como posso ajudar?</p>
                 </div>
             </div>
             <div class="chatbox__messages">
                 <div></div>
             </div>
             <div class="chatbox__footer">
-                <input type="text" placeholder="Write a message...">
-                <button class="chatbox__send--footer send__button">Send</button>
+                <input type="text" placeholder="Digite sua pergunta......">
+                <button class="chatbox__send--footer send__button">Enviar</button>
             </div>
         </div>
         <div class="chatbox__button">
-            <button><img src="{{ url_for('static', filename='images/chatbox-icon.svg') }}" /></button>
+            <button><img width="45px" height="45px" src="{{ url_for('static', filename='images/conv2.png') }}" alt="image"></button>
         </div>
     </div>
 </div>

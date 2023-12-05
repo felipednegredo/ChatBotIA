@@ -8,15 +8,14 @@ body {
     font-family: 'Nunito', sans-serif;
     font-weight: 400;
     font-size: 100%;
-    background: #F1F1F1;
 }
 
 *, html {
-    --primaryGradient: linear-gradient(93.12deg, #581B98 0.52%, #9C1DE7 100%);
-    --secondaryGradient: linear-gradient(268.91deg, #581B98 -2.14%, #9C1DE7 99.69%);
+    --primaryGradient: linear-gradient(93.12deg, #289c5e 0.52%, #2ab56b 100%);
+    --secondaryGradient: linear-gradient(268.91deg, #289c5e -2.14%, #2ab56b 99.69%);
     --primaryBoxShadow: 0px 10px 15px rgba(0, 0, 0, 0.1);
     --secondaryBoxShadow: 0px -10px 15px rgba(0, 0, 0, 0.1);
-    --primary: #581B98;
+    --primary: #289c5e;
 }
 
 /* CHATBOX
@@ -27,9 +26,9 @@ body {
     right: 30px;
 }
 
-/* CONTENT IS CLOSE */
+/* CHAT FECHADO */
 .chatbox__support {
-    display: flex;
+     display: flex;
     flex-direction: column;
     background: #eee;
     width: 300px;
@@ -37,9 +36,10 @@ body {
     z-index: -123456;
     opacity: 0;
     transition: all .5s ease-in-out;
+
 }
 
-/* CONTENT ISOPEN */
+/* CHAT ABERTO */
 .chatbox--active {
     transform: translateY(-40px);
     z-index: 123456;
@@ -58,6 +58,10 @@ body {
     border: none;
     outline: none;
     cursor: pointer;
+
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgb(30, 10, 0, 1);
+    font-family: verdana;
 }
 
 
@@ -98,7 +102,7 @@ body {
 
 .chatbox__support {
     background: #f9f9f9;
-    height: 450px;
+    height: 500px;
     width: 350px;
     box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.1);
     border-top-left-radius: 20px;
@@ -139,7 +143,7 @@ body {
 
 .messages__item {
     margin-top: 10px;
-    background: #E0E0E0;
+    background: #b0f9b8;
     padding: 8px 12px;
     max-width: 70%;
 }
@@ -155,7 +159,7 @@ body {
     border-top-left-radius: 20px;
     border-top-right-radius: 20px;
     border-bottom-left-radius: 20px;
-    background: var(--primary);
+    background: #207d1d;
     color: white;
 }
 
@@ -179,6 +183,7 @@ body {
     padding: 10px 10px;
     border-radius: 30px;
     text-align: left;
+    box-shadow: 0 0 5px rgb(30, 10, 0, 1);
 }
 
 .chatbox__send--footer {
