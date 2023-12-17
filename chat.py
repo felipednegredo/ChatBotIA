@@ -5,6 +5,7 @@ import unicodedata
 from model import NeuralNet
 from nltk_utils import bag_of_words, tokenize
 from fuzzywuzzy import fuzz
+import requests
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -45,6 +46,7 @@ def find_intent(input_text, intents):
 
     return matched_intent
 
+
 def get_response(msg):
     # Normalize o texto de entrada
     msg = normalize_text(msg)
@@ -69,12 +71,33 @@ def get_response(msg):
 
         if matched_intent:
             response = random.choice(matched_intent['responses'])
+
             if 'link' in matched_intent and matched_intent['link']:
-                response += " " + matched_intent['link']
+                if matched_intent['tag'] == 'cardapio':
+                    # Se a intent for do cardápio, obtém o link dinamicamente
+                    dynamic_link = get_dynamic_link(matched_intent['link'])
+                    response += f" <a target='_blank' href='https://ifrs.edu.br/sertao/assistencia-estudantil/restaurante/cardapio/'><img src='{dynamic_link}' width='400' height='300'></a>"
+                else:
+                    # Para outras intents com link estático
+                    response += f" {matched_intent['link']}"
+
             print(prob.item())
             return response
 
-    return "Desculpe, não entendi sua pergunta ou ela não está contemplada nesta interação. Você pode reformular de outra maneira ou utilizar a barra de pesquisa."
+    return "Desculpe, não entendi sua pergunta ou ela não está contemplada nesta interação. Você pode <strong>reformular</strong> de outra maneira ou utilizar a <strong>barra de pesquisa</strong>."
+
+
+def get_dynamic_link(static_link):
+    # Faz a requisição para obter o link dinâmico
+    response = requests.get('https://ifrs.edu.br/sertao/wp-json/wp/v2/media/31517?_fields=source_url')
+
+    # Verifica se a requisição foi bem-sucedida
+    if response.status_code == 200:
+        # Retorna o link dinâmico
+        return response.json()['source_url']
+    else:
+        # Se a requisição falhar, retorna o link estático
+        return static_link
 
 if __name__ == "__main__":
     print("Vamos lá! (digite 'sair' para sair)")

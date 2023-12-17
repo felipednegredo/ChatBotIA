@@ -64,7 +64,7 @@
 
       ],
       "responses": [
-        "Desculpe, não entendi sua pergunta ou ela não está contemplada nesta interação. Você pode reformular de outra maneira ou utilizar a barra de pesquisa."
+        "Desculpe, não entendi sua pergunta ou ela não está contemplada nesta interação. Você pode <strong>reformular</strong> de outra maneira ou utilizar a <strong>barra de pesquisa</strong>."
 
       ]
     },
@@ -206,7 +206,7 @@
         "o que vai ter pra comer na semana"
       ],
       "responses": [" "],
-      "link": "<a target='_blank' href='https://ifrs.edu.br/sertao/assistencia-estudantil/restaurante/cardapio/'><img src='https://ifrs.edu.br/sertao/wp-content/uploads/sites/7/2023/11/CARDAPIO-SEMANAL-2.png' width='400' height='300'></a>"
+      "link": "<a target='_blank' href='https://ifrs.edu.br/sertao/assistencia-estudantil/restaurante/cardapio/'><img src='https://ifrs.edu.br/sertao/wp-content/uploads/sites/7/2023/12/CARDAPIO-SEMANAL-1.png' width='400' height='300'></a>"
     },
     {
       "tag": "reserva_restaurante",
