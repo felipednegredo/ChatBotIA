@@ -9,3 +9,7 @@
 - NLTK
 - PyTorch
 
+## Funcionamento:
+![1 (1)](https://github.com/Renan1102/TCC/assets/103040108/fa2c66c4-9f88-4a46-a874-17f26e3dae6d)
+![1](https://github.com/Renan1102/TCC/assets/103040108/5c6dc449-ffac-4f73-a2f0-c4d4eb5a40a1)
+
