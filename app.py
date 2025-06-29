@@ -1,8 +1,12 @@
 from flask import Flask, render_template, request, jsonify
 
-from chat import get_response
+# Importar o sistema semântico
+from chat import SemanticChatBot
 
 app = Flask(__name__)
+
+# Inicializar o chatbot semântico
+semantic_bot = SemanticChatBot()
 
 
 @app.get("/")
@@ -13,12 +17,24 @@ def index_get():
 @app.post("/predict")
 def predict():
     text = request.get_json().get("message")
-    print(text)
-    # tod0: check if text is valid
-    response = get_response(text)
+    print(f"Mensagem recebida: {text}")
+    # Usar o novo sistema semântico
+    response = semantic_bot.get_response(text)
     message = {"answer": response}
     return jsonify(message)
 
 
+@app.get("/stats")
+def get_stats():
+    """Endpoint para obter estatísticas da base de conhecimento"""
+    try:
+        stats = semantic_bot.get_statistics()
+        return jsonify(stats)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 if __name__ == "__main__":
-    app.run()
+    print("=== Bot IFRS - Sistema Semântico ===")
+    print("Inicializando servidor Flask...")
+    app.run(debug=True)
