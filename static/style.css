@@ -203,3 +203,21 @@ body {
     box-shadow: 0px 10px 15px rgba(0, 0, 0, 0.1);
     cursor: pointer;
 }
+
+/* Indicador de digitação */
+.typing-indicator {
+    font-style: italic;
+    opacity: 0.7;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.7; }
+    50% { opacity: 1; }
+    100% { opacity: 0.7; }
+}
+
+/* Scroll suave para mensagens */
+.chatbox__messages {
+    scroll-behavior: smooth;
+}
