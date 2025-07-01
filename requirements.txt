@@ -1,9 +1,9 @@
 # Dependências do Sistema Semântico
 Flask==3.1.1
 requests==2.32.4
-chromadb==0.4.22
-sentence-transformers==2.2.2
-transformers==4.36.2
+chromadb==1.0.13
+sentence-transformers==4.1.0
+transformers==4.53.0
 
 # Dependências de sistema
 certifi==2025.4.26
