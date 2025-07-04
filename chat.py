@@ -3,11 +3,153 @@ import json
 import unicodedata
 import requests
 import logging
+from datetime import datetime, timedelta
+from dataclasses import dataclass
+from typing import List, Dict, Optional, Tuple
 from knowledge_base import KnowledgeBase
+from sentence_transformers import SentenceTransformer
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+@dataclass
+class ConversationTurn:
+    """Representa um turno de conversa com embedding vetorial"""
+    user_message: str
+    bot_response: str
+    timestamp: datetime
+    user_embedding: List[float]
+    combined_embedding: List[float]  # Embedding da pergunta + resposta
+    intent_tag: str = None
+    similarity_score: float = 0.0
+
+class ShortTermMemory:
+    """Sistema de memória de curto prazo com cache vetorial"""
+    
+    def __init__(self, max_turns: int = 5):
+        self.max_turns = max_turns
+        self.turns: List[ConversationTurn] = []
+        self.embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
+        
+    def add_turn(self, user_message: str, bot_response: str, intent_tag: str = None, similarity_score: float = 0.0):
+        """Adiciona um novo turno à memória com embeddings"""
+        try:
+            # Gerar embeddings
+            user_embedding = self.embedding_model.encode(user_message).tolist()
+            combined_text = f"Pergunta: {user_message} Resposta: {bot_response}"
+            combined_embedding = self.embedding_model.encode(combined_text).tolist()
+            
+            turn = ConversationTurn(
+                user_message=user_message,
+                bot_response=bot_response,
+                timestamp=datetime.now(),
+                user_embedding=user_embedding,
+                combined_embedding=combined_embedding,
+                intent_tag=intent_tag,
+                similarity_score=similarity_score
+            )
+            
+            self.turns.append(turn)
+            
+            # Manter apenas os últimos N turnos
+            if len(self.turns) > self.max_turns:
+                self.turns.pop(0)
+                
+            logger.info(f"Turno adicionado à memória. Total: {len(self.turns)} turnos")
+            
+        except Exception as e:
+            logger.error(f"Erro ao adicionar turno à memória: {str(e)}")
+    
+    def get_relevant_context(self, current_message: str, max_relevant: int = 3) -> List[ConversationTurn]:
+        """Busca turnos relevantes baseado na similaridade vetorial"""
+        if not self.turns:
+            return []
+        
+        try:
+            # Gerar embedding da mensagem atual
+            current_embedding = self.embedding_model.encode(current_message)
+            
+            # Calcular similaridades
+            similarities = []
+            for turn in self.turns:
+                # Calcular similaridade com a mensagem do usuário anterior
+                user_similarity = self._cosine_similarity(current_embedding, turn.user_embedding)
+                # Calcular similaridade com o contexto completo
+                context_similarity = self._cosine_similarity(current_embedding, turn.combined_embedding)
+                
+                # Usar a maior similaridade
+                max_similarity = max(user_similarity, context_similarity)
+                similarities.append((turn, max_similarity))
+            
+            # Ordenar por similaridade e retornar os mais relevantes
+            similarities.sort(key=lambda x: x[1], reverse=True)
+            
+            # Filtrar por threshold de relevância
+            relevant_turns = []
+            for turn, similarity in similarities:
+                if similarity > 0.3 and len(relevant_turns) < max_relevant:  # Threshold de relevância
+                    relevant_turns.append(turn)
+            
+            logger.info(f"Encontrados {len(relevant_turns)} turnos relevantes para: '{current_message}'")
+            return relevant_turns
+            
+        except Exception as e:
+            logger.error(f"Erro ao buscar contexto relevante: {str(e)}")
+            return []
+    
+    def get_recent_context_text(self, max_turns: int = 3) -> str:
+        """Retorna texto do contexto recente para injeção no prompt"""
+        recent_turns = self.turns[-max_turns:] if self.turns else []
+        
+        if not recent_turns:
+            return ""
+        
+        context_parts = []
+        for turn in recent_turns:
+            context_parts.append(f"Usuário anterior: {turn.user_message}")
+            context_parts.append(f"Bot anterior: {turn.bot_response}")
+        
+        return " ".join(context_parts)
+    
+    def get_contextual_keywords(self, current_message: str) -> List[str]:
+        """Extrai palavras-chave relevantes do contexto"""
+        relevant_turns = self.get_relevant_context(current_message, max_relevant=2)
+        
+        keywords = []
+        for turn in relevant_turns:
+            # Extrair palavras importantes da mensagem do usuário
+            user_words = turn.user_message.lower().split()
+            important_words = [w for w in user_words if len(w) > 3 and w not in 
+                             ['para', 'como', 'onde', 'quando', 'porque', 'qual', 'quem', 'que', 'isso', 'esta', 'esse']]
+            keywords.extend(important_words[:2])  # Máximo 2 palavras por turno
+            
+            # Adicionar intent_tag se disponível
+            if turn.intent_tag:
+                tag_words = turn.intent_tag.replace('_', ' ').split()
+                keywords.extend(tag_words)
+        
+        # Remover duplicatas e limitar
+        return list(set(keywords))[:5]
+    
+    def _cosine_similarity(self, a, b):
+        """Calcula similaridade do cosseno entre dois vetores"""
+        import numpy as np
+        return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
+    
+    def clear(self):
+        """Limpa a memória de curto prazo"""
+        self.turns = []
+        logger.info("Memória de curto prazo limpa")
+    
+    def get_memory_stats(self) -> Dict:
+        """Retorna estatísticas da memória"""
+        return {
+            'total_turns': len(self.turns),
+            'memory_age_minutes': (datetime.now() - self.turns[0].timestamp).total_seconds() / 60 if self.turns else 0,
+            'recent_intents': [turn.intent_tag for turn in self.turns[-3:] if turn.intent_tag],
+            'avg_similarity': sum(turn.similarity_score for turn in self.turns) / len(self.turns) if self.turns else 0
+        }
 
 class SemanticChatBot:
     def __init__(self, intents_file='intents.json'):
@@ -16,6 +158,9 @@ class SemanticChatBot:
         """
         self.bot_name = "Bot IFRS"
         self.knowledge_base = KnowledgeBase()
+        
+        # Inicializar memória de curto prazo
+        self.short_term_memory = ShortTermMemory(max_turns=5)
         
         # Carregar intenções na base de conhecimento
         try:
@@ -36,13 +181,25 @@ class SemanticChatBot:
     def get_response_with_context(self, user_message, conversation_history=None, similarity_threshold=0.6):
         """
         Gera resposta usando busca semântica considerando o contexto da conversa
-        Com sistema de sugestões quando há baixa certeza
+        Com sistema de sugestões quando há baixa certeza e memória de curto prazo
         """
         try:
             # Normalizar mensagem do usuário
             normalized_message = self.normalize_text(user_message)
             
             logger.info(f"Processando mensagem: '{user_message}' -> '{normalized_message}'")
+            
+            # 1. USAR MEMÓRIA DE CURTO PRAZO PARA ENRIQUECER O CONTEXTO
+            relevant_memory = self.short_term_memory.get_relevant_context(user_message, max_relevant=3)
+            contextual_keywords = self.short_term_memory.get_contextual_keywords(user_message)
+            
+            if relevant_memory:
+                logger.info(f"Memória de curto prazo: {len(relevant_memory)} turnos relevantes encontrados")
+                logger.info(f"Palavras-chave contextuais: {contextual_keywords}")
+            
+            # 2. ENRIQUECER QUERY COM CONTEXTO DA MEMÓRIA
+            enriched_query = self._enrich_query_with_memory(normalized_message, relevant_memory, contextual_keywords)
+            
             if conversation_history:
                 logger.info(f"Contexto da conversa incluído: {len(conversation_history)} mensagens anteriores")
                 # Analisar contexto para debug
@@ -51,29 +208,40 @@ class SemanticChatBot:
                 # Verificar se o usuário está selecionando uma opção numérica
                 option_response = self._check_option_selection(user_message, conversation_history)
                 if option_response:
+                    # Armazenar na memória antes de retornar
+                    self.short_term_memory.add_turn(user_message, option_response)
                     return option_response
             
-            # Primeira tentativa: buscar com a mensagem original (threshold padrão)
-            logger.info(f"Tentativa 1: Busca com mensagem original (threshold: {similarity_threshold})")
+            # 3. BUSCAR COM QUERY ENRIQUECIDA PELA MEMÓRIA
+            logger.info(f"Tentativa 1: Busca com query enriquecida pela memória (threshold: {similarity_threshold})")
             result = self.knowledge_base.search_similar_intent(
-                normalized_message, 
-                n_results=5,  # Aumentar número de resultados
+                enriched_query, 
+                n_results=5,
                 similarity_threshold=similarity_threshold
             )
             
-            # Se não encontrou resultado satisfatório, tentar com contexto enriquecido
+            # 4. FALLBACK: Se não encontrou com memória, tentar com query original
+            if not result:
+                logger.info("Tentativa 2: Busca com mensagem original...")
+                result = self.knowledge_base.search_similar_intent(
+                    normalized_message, 
+                    n_results=5,
+                    similarity_threshold=similarity_threshold
+                )
+            
+            # 5. FALLBACK: Se não encontrou resultado satisfatório, tentar com contexto da conversa
             if not result and conversation_history:
-                logger.info("Tentativa 2: Busca com contexto enriquecido...")
+                logger.info("Tentativa 3: Busca com contexto da conversa...")
                 enriched_message = self._enrich_message_with_context(user_message, conversation_history)
                 result = self.knowledge_base.search_similar_intent(
                     enriched_message, 
                     n_results=5,
-                    similarity_threshold=similarity_threshold - 0.1  # Threshold menor
+                    similarity_threshold=similarity_threshold - 0.1
                 )
             
-            # Terceira tentativa: usar apenas palavras-chave do contexto se ainda não encontrou
+            # 6. FALLBACK: Usar palavras-chave do contexto histórico
             if not result and conversation_history:
-                logger.info("Tentativa 3: Busca com palavras-chave do contexto...")
+                logger.info("Tentativa 4: Busca com palavras-chave do contexto...")
                 context_keywords = self._extract_context_keywords(conversation_history)
                 if context_keywords:
                     keyword_query = f"{user_message} {' '.join(context_keywords)}"
@@ -82,12 +250,12 @@ class SemanticChatBot:
                     result = self.knowledge_base.search_similar_intent(
                         normalized_keyword_query, 
                         n_results=5,
-                        similarity_threshold=similarity_threshold - 0.2  # Threshold ainda menor
+                        similarity_threshold=similarity_threshold - 0.2
                     )
             
-            # Quarta tentativa: busca com threshold muito baixo apenas na mensagem original
+            # 7. ÚLTIMO FALLBACK: Busca com threshold muito baixo
             if not result:
-                logger.info("Tentativa 4: Busca com threshold muito baixo...")
+                logger.info("Tentativa 5: Busca com threshold muito baixo...")
                 low_threshold_result = self.knowledge_base.search_similar_intent(
                     normalized_message, 
                     n_results=5,
@@ -129,6 +297,9 @@ class SemanticChatBot:
                     else:
                         # Para outros links estáticos
                         response += f" {metadata['link']}"
+                
+                # Adicionar à memória de curto prazo
+                self.short_term_memory.add_turn(user_message, response, metadata['tag'], similarity)
                 
                 return response
             else:
@@ -306,6 +477,7 @@ class SemanticChatBot:
     def _get_contextual_fallback_response(self, conversation_history):
         """
         Resposta padrão contextualizada quando nenhuma intenção é encontrada
+        Usa memória de curto prazo para contexto mais relevante
         """
         fallback_responses = [
             "Desculpe, não entendi sua pergunta ou ela não está contemplada nesta interação. Você pode <strong>reformular</strong> de outra maneira ou utilizar a <strong>barra de pesquisa</strong>.",
@@ -313,8 +485,23 @@ class SemanticChatBot:
             "Ainda estou aprendendo! Pode tentar fazer a pergunta de outra forma?"
         ]
         
-        # Se há contexto da conversa, sugerir palavras-chave do contexto
-        if conversation_history:
+        # Usar memória de curto prazo para contexto mais relevante
+        memory_stats = self.short_term_memory.get_memory_stats()
+        if memory_stats['total_turns'] > 0:
+            # Sugerir tópicos baseados nos intents recentes da memória
+            recent_intents = memory_stats['recent_intents']
+            if recent_intents:
+                intent_topics = [intent.replace('_', ' ') for intent in recent_intents]
+                unique_topics = list(set(intent_topics))
+                
+                contextual_responses = [
+                    f"Com base em nossa conversa sobre {', '.join(unique_topics)}, não consegui entender completamente sua última pergunta. Pode reformular?",
+                    f"Considerando que falamos sobre {', '.join(unique_topics)}, preciso que você seja mais específico. Pode tentar de outra forma?",
+                ]
+                fallback_responses.extend(contextual_responses)
+        
+        # Fallback para contexto da conversa se memória não tiver info suficiente
+        elif conversation_history:
             recent_topics = []
             for msg in conversation_history[-2:]:
                 if msg['type'] == 'user':
@@ -364,9 +551,19 @@ class SemanticChatBot:
     
     def get_statistics(self):
         """
-        Retorna estatísticas da base de conhecimento
+        Retorna estatísticas da base de conhecimento e memória de curto prazo
         """
-        return self.knowledge_base.get_collection_stats()
+        base_stats = self.knowledge_base.get_collection_stats()
+        memory_stats = self.get_memory_stats()
+        
+        # Combinar estatísticas
+        combined_stats = {
+            **base_stats,
+            'short_term_memory': memory_stats,
+            'memory_context_summary': self.get_memory_context_summary()
+        }
+        
+        return combined_stats
     
     def reset_knowledge_base(self):
         """
@@ -904,6 +1101,79 @@ class SemanticChatBot:
         formatted = tag.replace('_', ' ').title()
         
         return formatted
+
+    def _enrich_query_with_memory(self, query: str, relevant_memory: List[ConversationTurn], contextual_keywords: List[str]) -> str:
+        """
+        Enriquece a query com informações da memória de curto prazo
+        """
+        enriched_parts = [query]
+        
+        # Adicionar palavras-chave do contexto da memória
+        if contextual_keywords:
+            enriched_parts.extend(contextual_keywords[:3])  # Máximo 3 palavras-chave
+            logger.info(f"Adicionadas palavras-chave da memória: {contextual_keywords[:3]}")
+        
+        # Adicionar contexto dos turnos mais relevantes
+        if relevant_memory:
+            for turn in relevant_memory[:2]:  # Máximo 2 turnos mais relevantes
+                # Adicionar intent_tag se disponível
+                if turn.intent_tag:
+                    enriched_parts.append(turn.intent_tag.replace('_', ' '))
+                
+                # Adicionar palavras importantes da mensagem anterior
+                important_words = self._extract_important_words(turn.user_message)
+                enriched_parts.extend(important_words[:2])  # Máximo 2 palavras por turno
+        
+        enriched_query = " ".join(enriched_parts)
+        
+        if enriched_query != query:
+            logger.info(f"Query enriquecida: '{query}' -> '{enriched_query}'")
+        
+        return enriched_query
+    
+    def _extract_important_words(self, text: str) -> List[str]:
+        """
+        Extrai palavras importantes de um texto
+        """
+        stop_words = ['para', 'como', 'onde', 'quando', 'porque', 'qual', 'quem', 'que', 'isso', 'esta', 'esse', 'uma', 'um', 'de', 'da', 'do', 'na', 'no', 'em', 'com', 'por', 'se', 'mais', 'muito', 'bem', 'ja', 'so', 'ate', 'mas', 'ou', 'sim', 'nao']
+        
+        words = self.normalize_text(text).split()
+        important_words = []
+        
+        for word in words:
+            if len(word) > 3 and word not in stop_words:
+                important_words.append(word)
+        
+        return important_words
+    
+    def clear_short_term_memory(self):
+        """
+        Limpa a memória de curto prazo
+        """
+        self.short_term_memory.clear()
+        logger.info("Memória de curto prazo limpa")
+    
+    def get_memory_stats(self) -> Dict:
+        """
+        Retorna estatísticas da memória de curto prazo
+        """
+        return self.short_term_memory.get_memory_stats()
+    
+    def get_memory_context_summary(self) -> str:
+        """
+        Retorna um resumo do contexto atual da memória
+        """
+        stats = self.get_memory_stats()
+        if stats['total_turns'] == 0:
+            return "Nenhum contexto na memória."
+        
+        summary = f"Memória: {stats['total_turns']} turnos"
+        if stats['recent_intents']:
+            summary += f", tópicos recentes: {', '.join(stats['recent_intents'])}"
+        if stats['avg_similarity'] > 0:
+            summary += f", similaridade média: {stats['avg_similarity']:.2f}"
+        
+        return summary
 
 # Função de compatibilidade com o código existente
 def get_response(msg):
