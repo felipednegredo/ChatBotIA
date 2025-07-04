@@ -1,15 +1,36 @@
 <!DOCTYPE html>
-<html lang="en">
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Chatbot</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IFRS Sertão - Assistente Virtual</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-<img width="100%" height="100%" src="{{ url_for('static', filename='images/tela2.png') }}" alt="image">
-<div class="container">
+    <!-- Background com padrões geométricos -->
+    <div class="background-container">
+        <div class="geometric-patterns">
+            <div class="circle-pattern circle-1"></div>
+            <div class="circle-pattern circle-2"></div>
+            <div class="circle-pattern circle-3"></div>
+            <div class="circle-pattern circle-4"></div>
+            <div class="brain-pattern brain-1"></div>
+            <div class="brain-pattern brain-2"></div>
+        </div>
+    </div>
+    
+    <!-- Conteúdo principal -->
+    <div class="main-content">
+        <div class="graduation-icon">
+            <i class="fas fa-graduation-cap"></i>
+        </div>
+        <h1 class="main-title">IFRS Sertão</h1>
+        <p class="main-subtitle">Assistente Virtual Inteligente</p>
+    </div>
 
+    <!-- Chatbot Widget -->
     <div class="chatbox">
         <div class="chatbox__support">
             <div class="chatbox__header">
@@ -17,23 +38,22 @@
                     <img width="65px" height="60px" src="{{ url_for('static', filename='images/bot.png') }}" alt="image">
                 </div>
                 <div class="chatbox__content--header">
-                    <h4 class="chatbox__heading--header">Chatbot IFRS</h4>
-                    <p class="chatbox__description--header">Olá estudante. Como posso ajudar?</p>
+                    <h4 class="chatbox__heading--header">Assistente IFRS</h4>
+                    <p class="chatbox__description--header">Online - Como posso ajudar?</p>
                 </div>
             </div>
             <div class="chatbox__messages">
                 <div></div>
             </div>
             <div class="chatbox__footer">
-                <input type="text" placeholder="Digite sua pergunta......">
+                <input type="text" placeholder="Digite sua pergunta...">
                 <button class="chatbox__send--footer send__button">Enviar</button>
             </div>
         </div>
         <div class="chatbox__button">
-            <button><img width="45px" height="45px" src="{{ url_for('static', filename='images/conv2.png') }}" alt="image"></button>
+            <button><img width="45px" height="45px" src="{{ url_for('static', filename='images/chatbox-icon.svg') }}" alt="image"></button>
         </div>
     </div>
-</div>
 
     <script>
         $SCRIPT_ROOT = {{ request.script_root|tojson }};

@@ -5,9 +5,14 @@
 }
 
 body {
-    font-family: 'Nunito', sans-serif;
+    font-family: 'Inter', 'Nunito', sans-serif;
     font-weight: 400;
     font-size: 100%;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    position: relative;
 }
 
 *, html {
@@ -397,6 +402,149 @@ body {
     background: rgba(0, 0, 0, 0.8);
 }
 
+/* Background com padrões geométricos */
+.background-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #4a9b4a 0%, #2d7a2d 100%);
+    z-index: -1;
+    overflow: hidden;
+}
+
+.geometric-patterns {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+/* Padrões circulares */
+.circle-pattern {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.circle-1 {
+    width: 200px;
+    height: 200px;
+    top: 15%;
+    left: 10%;
+    animation: float 6s ease-in-out infinite;
+}
+
+.circle-2 {
+    width: 300px;
+    height: 300px;
+    top: 60%;
+    left: 70%;
+    animation: float 8s ease-in-out infinite reverse;
+}
+
+.circle-3 {
+    width: 150px;
+    height: 150px;
+    top: 40%;
+    left: 20%;
+    animation: float 7s ease-in-out infinite;
+}
+
+.circle-4 {
+    width: 100px;
+    height: 100px;
+    top: 70%;
+    left: 40%;
+    animation: float 5s ease-in-out infinite reverse;
+}
+
+/* Padrões de cérebro/IA */
+.brain-pattern {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 50%;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+}
+
+.brain-1 {
+    top: 25%;
+    left: 80%;
+    animation: pulse 4s ease-in-out infinite;
+}
+
+.brain-2 {
+    top: 80%;
+    left: 15%;
+    animation: pulse 3s ease-in-out infinite reverse;
+}
+
+.brain-1::before,
+.brain-2::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-20px) rotate(180deg); }
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 0.3; }
+    50% { transform: scale(1.2); opacity: 0.7; }
+}
+
+/* Conteúdo principal */
+.main-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: white;
+    z-index: 10;
+}
+
+.graduation-icon {
+    font-size: 120px;
+    margin-bottom: 30px;
+    opacity: 0.9;
+    animation: graduation-pulse 3s ease-in-out infinite;
+}
+
+@keyframes graduation-pulse {
+    0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.9; }
+    50% { transform: scale(1.1) rotate(5deg); opacity: 1; }
+}
+
+.main-title {
+    font-size: 4rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+    text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    letter-spacing: -0.02em;
+    font-family: 'Inter', sans-serif;
+}
+
+.main-subtitle {
+    font-size: 1.5rem;
+    font-weight: 400;
+    opacity: 0.9;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    font-family: 'Inter', sans-serif;
+}
+
 /* Responsividade para dispositivos menores */
 @media (max-width: 400px) {
     .cardapio-container {
@@ -418,5 +566,58 @@ body {
     .cardapio-link {
         padding: 8px 15px;
         font-size: 0.9rem;
+    }
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .main-title {
+        font-size: 2.5rem;
+    }
+    
+    .main-subtitle {
+        font-size: 1.2rem;
+    }
+    
+    .graduation-icon {
+        font-size: 80px;
+    }
+    
+    .circle-1, .circle-2, .circle-3, .circle-4 {
+        opacity: 0.5;
+    }
+    
+    .chatbox {
+        bottom: 20px;
+        right: 20px;
+    }
+    
+    .chatbox__support {
+        width: 280px;
+        height: 400px;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-title {
+        font-size: 2rem;
+    }
+    
+    .main-subtitle {
+        font-size: 1rem;
+    }
+    
+    .graduation-icon {
+        font-size: 60px;
+    }
+    
+    .chatbox {
+        bottom: 10px;
+        right: 10px;
+    }
+    
+    .chatbox__support {
+        width: 250px;
+        height: 350px;
     }
 }
