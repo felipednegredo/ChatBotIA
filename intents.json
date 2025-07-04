@@ -35,40 +35,6 @@
       "responses": ["Eu quem agradeço! &#128517", "Foi um prazer! &#128517 Sempre que precisar estou aqui", "Foi um prazer ser útil!"]
     },
     {
-      "tag": "nao_encontrada",
-      "patterns": [
-        "fsdfdsf",
-        "kkkkkkkk",
-        "dsadsadcx",
-        "sasvc",
-        "aaaaaa",
-        "bbbbbbb",
-        "sasadas",
-        "slacxvcx",
-        "%¨$#$¨$¨$(*&#&",
-        "###$#%%$¨@!#",
-        "$¨$@(#)%*&%¨!",
-        "qqqqq",
-        "ytyuyt",
-        ",xcx,bvcb",
-        "teyotrtefv",
-        "asavcvnbmnmbn,fgdtrjrt",
-        "retretertertretre",
-        "lllllll",
-        "cccccc",
-        "zzzzzzz",
-        "gggggg",
-        "mmmmmmmm",
-        "nnnnn",
-        "cvvbcxewqgfytr"
-
-      ],
-      "responses": [
-        "Desculpe, não entendi sua pergunta ou ela não está contemplada nesta interação. Você pode <strong>reformular</strong> de outra maneira ou utilizar a <strong>barra de pesquisa</strong>."
-
-      ]
-    },
-    {
       "tag": "horario",
       "patterns": [
         "Qual é o meu horário de aula para hoje?",

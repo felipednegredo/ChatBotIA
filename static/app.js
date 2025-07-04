@@ -152,7 +152,13 @@ class Chatbox{
             {
                 // Adicionar classe especial para indicador de digitação
                 let additionalClass = item.message === "Bot está digitando..." ? " typing-indicator" : "";
-                html += '<div class="messages__item messages__item--visitor' + additionalClass + '">' + item.message + '</div>'
+                
+                // Verificar se a mensagem contém HTML do cardápio
+                if (item.message.includes('cardapio-container')) {
+                    html += '<div class="messages__item messages__item--visitor messages__item--cardapio' + additionalClass + '">' + item.message + '</div>';
+                } else {
+                    html += '<div class="messages__item messages__item--visitor' + additionalClass + '">' + item.message + '</div>';
+                }
             }
             else
             {
@@ -170,3 +176,46 @@ class Chatbox{
 
 const chatbox = new Chatbox();
 chatbox.display();
+
+// Função para abrir modal do cardápio
+function openCardapioModal(img) {
+    // Criar elementos do modal
+    const modal = document.createElement('div');
+    modal.className = 'cardapio-modal';
+    modal.innerHTML = `
+        <span class="cardapio-modal-close">&times;</span>
+        <div class="cardapio-modal-content">
+            <img class="cardapio-modal-image" src="${img.src}" alt="Cardápio ampliado">
+        </div>
+    `;
+    
+    // Adicionar ao body
+    document.body.appendChild(modal);
+    
+    // Mostrar modal
+    modal.style.display = 'block';
+    
+    // Adicionar evento de clique para fechar
+    const closeBtn = modal.querySelector('.cardapio-modal-close');
+    const modalBg = modal;
+    
+    closeBtn.onclick = function() {
+        modal.style.display = 'none';
+        document.body.removeChild(modal);
+    }
+    
+    modalBg.onclick = function(event) {
+        if (event.target === modalBg) {
+            modal.style.display = 'none';
+            document.body.removeChild(modal);
+        }
+    }
+    
+    // Fechar com ESC
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            modal.style.display = 'none';
+            document.body.removeChild(modal);
+        }
+    });
+}

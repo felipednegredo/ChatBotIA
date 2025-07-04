@@ -163,6 +163,14 @@ body {
     color: white;
 }
 
+/* Estilos especiais para mensagens com cardápio */
+.messages__item--cardapio {
+    background: transparent;
+    padding: 5px;
+    max-width: 95%;
+    border-radius: 0;
+}
+
 /* FOOTER */
 .chatbox__footer {
     display: flex;
@@ -220,4 +228,195 @@ body {
 /* Scroll suave para mensagens */
 .chatbox__messages {
     scroll-behavior: smooth;
+}
+
+/* Estilos para o cardápio */
+.cardapio-container {
+    background: #fff;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    margin: 10px 0;
+    max-width: 100%;
+}
+
+.cardapio-header {
+    background: var(--primaryGradient);
+    color: white;
+    padding: 15px;
+    text-align: center;
+}
+
+.cardapio-header h3 {
+    margin: 0 0 5px 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.cardapio-header p {
+    margin: 0;
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.cardapio-image-wrapper {
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.cardapio-image-wrapper:hover {
+    transform: scale(1.02);
+}
+
+.cardapio-image {
+    width: 100%;
+    height: auto;
+    display: block;
+    transition: filter 0.3s ease;
+}
+
+.cardapio-image-wrapper:hover .cardapio-image {
+    filter: brightness(0.9);
+}
+
+.cardapio-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    color: white;
+    font-weight: 600;
+}
+
+.cardapio-image-wrapper:hover .cardapio-overlay {
+    opacity: 1;
+}
+
+.cardapio-actions {
+    padding: 15px;
+    text-align: center;
+    background: #f8f9fa;
+}
+
+.cardapio-fallback {
+    padding: 20px;
+    text-align: center;
+    background: #f8f9fa;
+    color: #666;
+    line-height: 1.6;
+}
+
+.cardapio-fallback p {
+    margin: 10px 0;
+}
+
+.cardapio-link {
+    display: inline-block;
+    background: var(--primaryGradient);
+    color: white;
+    text-decoration: none;
+    padding: 10px 20px;
+    border-radius: 25px;
+    font-weight: 500;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.cardapio-link:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(40, 156, 94, 0.3);
+    text-decoration: none;
+    color: white;
+}
+
+/* Modal para ampliar cardápio */
+.cardapio-modal {
+    display: none;
+    position: fixed;
+    z-index: 999999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.cardapio-modal-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    max-width: 90%;
+    max-height: 90%;
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.cardapio-modal-image {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.cardapio-modal-close {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    color: white;
+    font-size: 40px;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 1000000;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s ease;
+}
+
+.cardapio-modal-close:hover {
+    background: rgba(0, 0, 0, 0.8);
+}
+
+/* Responsividade para dispositivos menores */
+@media (max-width: 400px) {
+    .cardapio-container {
+        margin: 5px 0;
+    }
+    
+    .cardapio-header {
+        padding: 10px;
+    }
+    
+    .cardapio-header h3 {
+        font-size: 1rem;
+    }
+    
+    .cardapio-actions {
+        padding: 10px;
+    }
+    
+    .cardapio-link {
+        padding: 8px 15px;
+        font-size: 0.9rem;
+    }
 }

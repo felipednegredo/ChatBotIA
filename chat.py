@@ -293,7 +293,47 @@ class SemanticChatBot:
                     if metadata['tag'] == 'cardapio':
                         # Para cardápio, obter link dinâmico
                         dynamic_link = self.get_dynamic_link(metadata['link'])
-                        response += f" <a target='_blank' href='https://ifrs.edu.br/sertao/assistencia-estudantil/restaurante/cardapio/'><img src='{dynamic_link}' width='400' height='300'></a>"
+                        
+                        if dynamic_link and dynamic_link != metadata['link']:
+                            # Link dinâmico obtido com sucesso
+                            response += f"""
+                            <div class="cardapio-container">
+                                <div class="cardapio-header">
+                                    <h3>📍 Cardápio do Restaurante IFRS</h3>
+                                    <p>Confira as opções de hoje:</p>
+                                </div>
+                                <div class="cardapio-image-wrapper">
+                                    <img src='{dynamic_link}' alt='Cardápio do dia' class='cardapio-image' onclick='openCardapioModal(this)' onerror='this.style.display="none"; this.parentElement.innerHTML="<p style=\"text-align: center; padding: 20px; color: #666;\">Imagem do cardápio não disponível no momento</p>";'>
+                                    <div class="cardapio-overlay">
+                                        <span>Clique para ampliar</span>
+                                    </div>
+                                </div>
+                                <div class="cardapio-actions">
+                                    <a href='https://ifrs.edu.br/sertao/assistencia-estudantil/restaurante/cardapio/' target='_blank' class='cardapio-link'>
+                                        🔗 Ver no site oficial
+                                    </a>
+                                </div>
+                            </div>
+                            """
+                        else:
+                            # Fallback quando não conseguir obter o link dinâmico
+                            response += f"""
+                            <div class="cardapio-container">
+                                <div class="cardapio-header">
+                                    <h3>📍 Cardápio do Restaurante IFRS</h3>
+                                    <p>Informações sobre o cardápio:</p>
+                                </div>
+                                <div class="cardapio-fallback">
+                                    <p>🍽️ O cardápio não está disponível para visualização no momento.</p>
+                                    <p>Você pode consultar diretamente no site oficial ou comparecer ao restaurante.</p>
+                                </div>
+                                <div class="cardapio-actions">
+                                    <a href='https://ifrs.edu.br/sertao/assistencia-estudantil/restaurante/cardapio/' target='_blank' class='cardapio-link'>
+                                        🔗 Ver no site oficial
+                                    </a>
+                                </div>
+                            </div>
+                            """
                     else:
                         # Para outros links estáticos
                         response += f" {metadata['link']}"
@@ -531,22 +571,34 @@ class SemanticChatBot:
     
     def get_dynamic_link(self, static_link):
         """
-        Obtém link dinâmico para o cardápio
+        Obtém link dinâmico para o cardápio com fallback melhorado
         """
         try:
             response = requests.get(
                 'https://ifrs.edu.br/sertao/wp-json/wp/v2/media/31517?_fields=source_url',
-                timeout=5
+                timeout=10
             )
             
             if response.status_code == 200:
-                return response.json()['source_url']
+                data = response.json()
+                if 'source_url' in data and data['source_url']:
+                    logger.info("Link dinâmico do cardápio obtido com sucesso")
+                    return data['source_url']
+                else:
+                    logger.warning("Resposta da API não contém source_url válido")
+                    return static_link
             else:
                 logger.warning(f"Falha ao obter link dinâmico. Status: {response.status_code}")
                 return static_link
                 
+        except requests.exceptions.Timeout:
+            logger.error("Timeout ao obter link dinâmico do cardápio")
+            return static_link
+        except requests.exceptions.ConnectionError:
+            logger.error("Erro de conexão ao obter link dinâmico do cardápio")
+            return static_link
         except Exception as e:
-            logger.error(f"Erro ao obter link dinâmico: {str(e)}")
+            logger.error(f"Erro inesperado ao obter link dinâmico: {str(e)}")
             return static_link
     
     def get_statistics(self):
