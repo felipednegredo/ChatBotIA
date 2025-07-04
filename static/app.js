@@ -24,16 +24,6 @@ class Chatbox{
                 this.onSendButton(chatBox)
             }
         })
-
-        // Adicionar mensagem de boas-vindas contextual
-        if (this.messages.length === 0) {
-            let welcomeMsg = {
-                name: "Sam", 
-                message: "Olá! Sou o Bot IFRS. Posso ajudar com informações sobre o campus. Como posso ajudá-lo hoje?"
-            };
-            this.messages.push(welcomeMsg);
-            this.updateChatText(chatBox);
-        }
     }
 
         toggleState(chatBox){
