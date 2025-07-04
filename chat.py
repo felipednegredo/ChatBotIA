@@ -137,6 +137,105 @@ class ShortTermMemory:
         import numpy as np
         return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
     
+    def is_duplicate_response(self, new_response: str, intent_tag: str = None, similarity_threshold: float = 0.8) -> bool:
+        """
+        Verifica se a nova resposta é muito similar às respostas recentes
+        """
+        if not self.turns:
+            return False
+        
+        try:
+            # Gerar embedding da nova resposta
+            new_response_embedding = self.embedding_model.encode(new_response)
+            
+            # Verificar as últimas 3 respostas
+            recent_responses = self.turns[-3:]
+            
+            for turn in recent_responses:
+                # Calcular similaridade com a resposta anterior
+                response_embedding = self.embedding_model.encode(turn.bot_response)
+                similarity = self._cosine_similarity(new_response_embedding, response_embedding)
+                
+                # Se for muito similar, considerar duplicata
+                if similarity > similarity_threshold:
+                    logger.info(f"Resposta duplicada detectada! Similaridade: {similarity:.3f}")
+                    return True
+                
+                # Verificar se é o mesmo intent sendo repetido muito rapidamente
+                if intent_tag and turn.intent_tag == intent_tag:
+                    time_diff = (datetime.now() - turn.timestamp).total_seconds()
+                    if time_diff < 30:  # Menos de 30 segundos
+                        logger.info(f"Mesmo intent repetido muito rapidamente: {intent_tag}")
+                        return True
+            
+            return False
+            
+        except Exception as e:
+            logger.error(f"Erro ao verificar duplicata: {str(e)}")
+            return False
+    
+    def get_alternative_response(self, intent_tag: str, original_responses: List[str]) -> str:
+        """
+        Retorna uma resposta alternativa quando uma duplicata é detectada
+        """
+        # Verificar quais respostas já foram usadas recentemente
+        recent_responses = [turn.bot_response for turn in self.turns[-3:]]
+        
+        # Filtrar respostas que não foram usadas recentemente
+        unused_responses = []
+        for response in original_responses:
+            is_used = False
+            for recent in recent_responses:
+                if response.lower() in recent.lower() or recent.lower() in response.lower():
+                    is_used = True
+                    break
+            if not is_used:
+                unused_responses.append(response)
+        
+        # Se há respostas não usadas, retornar uma delas
+        if unused_responses:
+            return random.choice(unused_responses)
+        
+        # Se todas foram usadas, criar uma resposta contextual
+        return self._create_contextual_alternative(intent_tag)
+    
+    def _create_contextual_alternative(self, intent_tag: str) -> str:
+        """
+        Cria uma resposta alternativa contextual
+        """
+        alternatives = {
+            'calendario_academico': [
+                "Aqui estão as informações atualizadas sobre o calendário acadêmico:",
+                "Vou te mostrar os detalhes do calendário acadêmico novamente:",
+                "Confira estas informações importantes sobre o calendário:"
+            ],
+            'cardapio': [
+                "Vou mostrar o cardápio novamente para você:",
+                "Aqui está o cardápio atualizado:",
+                "Confira o cardápio do restaurante:"
+            ],
+            'horario': [
+                "Aqui estão as informações sobre horários:",
+                "Vou te ajudar com os horários novamente:",
+                "Confira os horários atualizados:"
+            ]
+        }
+        
+        # Tentar encontrar alternativa específica
+        for key, alts in alternatives.items():
+            if key in intent_tag.lower():
+                return random.choice(alts)
+        
+        # Alternativa genérica
+        generic_alternatives = [
+            "Deixe-me te ajudar com isso novamente:",
+            "Aqui estão as informações que você precisa:",
+            "Vou te mostrar esses detalhes:",
+            "Confira essas informações importantes:"
+        ]
+        
+        return random.choice(generic_alternatives)
+    
     def clear(self):
         """Limpa a memória de curto prazo"""
         self.turns = []
@@ -283,7 +382,18 @@ class SemanticChatBot:
                 
                 # Decodificar respostas do JSON
                 responses = json.loads(metadata['responses'])
-                response = random.choice(responses)
+                
+                # Verificar se a resposta seria duplicada
+                potential_response = random.choice(responses)
+                
+                # Verificar duplicata antes de personalizar
+                if self.short_term_memory.is_duplicate_response(potential_response, metadata['tag']):
+                    logger.info("Resposta duplicada detectada, buscando alternativa...")
+                    # Tentar uma resposta alternativa
+                    alternative_response = self.short_term_memory.get_alternative_response(metadata['tag'], responses)
+                    response = alternative_response
+                else:
+                    response = potential_response
                 
                 # Personalizar resposta baseada no contexto
                 response = self._personalize_response_with_context(response, conversation_history)
@@ -338,10 +448,23 @@ class SemanticChatBot:
                         # Para outros links estáticos
                         response += f" {metadata['link']}"
                 
-                # Adicionar à memória de curto prazo
-                self.short_term_memory.add_turn(user_message, response, metadata['tag'], similarity)
+                # Verificação final de duplicata após adicionar links
+                final_response = response
+                if self.short_term_memory.is_duplicate_response(final_response, metadata['tag'], similarity_threshold=0.7):
+                    logger.info("Resposta final duplicada detectada, adicionando variação...")
+                    # Adicionar uma pequena variação para evitar duplicata exata
+                    variation_prefixes = [
+                        "Aqui está novamente: ",
+                        "Conforme solicitado: ",
+                        "Vou te mostrar: ",
+                        "Estas são as informações: "
+                    ]
+                    final_response = random.choice(variation_prefixes) + final_response
                 
-                return response
+                # Adicionar à memória de curto prazo
+                self.short_term_memory.add_turn(user_message, final_response, metadata['tag'], similarity)
+                
+                return final_response
             else:
                 logger.info("Nenhuma intenção similar encontrada em todas as tentativas")
                 # Última tentativa: oferecer opções baseadas em busca ampla
