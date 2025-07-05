@@ -137,7 +137,7 @@ class Chatbox{
 
     updateChatText(chatbox) {
         var html = '';
-        this.messages.slice().reverse().forEach(function(item, number) {
+        this.messages.forEach(function(item, number) {
             if (item.name === "Sam")
             {
                 // Adicionar classe especial para indicador de digitação
