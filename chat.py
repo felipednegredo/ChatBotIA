@@ -3,6 +3,7 @@ import json
 import unicodedata
 import requests
 import logging
+import warnings
 from datetime import datetime, timedelta
 from dataclasses import dataclass
 from typing import List, Dict, Optional, Tuple
@@ -12,6 +13,13 @@ from sentence_transformers import SentenceTransformer
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Suprimir warnings desnecessários
+warnings.filterwarnings("ignore", category=UserWarning, module="sentence_transformers")
+warnings.filterwarnings("ignore", category=FutureWarning, module="sentence_transformers")
+
+# Configurar logging do sentence transformers para reduzir mensagens desnecessárias
+logging.getLogger("sentence_transformers").setLevel(logging.WARNING)
 
 @dataclass
 class ConversationTurn:
@@ -30,15 +38,17 @@ class ShortTermMemory:
     def __init__(self, max_turns: int = 5):
         self.max_turns = max_turns
         self.turns: List[ConversationTurn] = []
+        # Inicializar modelo com configurações otimizadas
         self.embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
+        self.embedding_model.encode("test", show_progress_bar=False)  # Warm up silencioso
         
     def add_turn(self, user_message: str, bot_response: str, intent_tag: str = None, similarity_score: float = 0.0):
         """Adiciona um novo turno à memória com embeddings"""
         try:
-            # Gerar embeddings
-            user_embedding = self.embedding_model.encode(user_message).tolist()
+            # Gerar embeddings sem mostrar progresso
+            user_embedding = self.embedding_model.encode(user_message, show_progress_bar=False).tolist()
             combined_text = f"Pergunta: {user_message} Resposta: {bot_response}"
-            combined_embedding = self.embedding_model.encode(combined_text).tolist()
+            combined_embedding = self.embedding_model.encode(combined_text, show_progress_bar=False).tolist()
             
             turn = ConversationTurn(
                 user_message=user_message,
@@ -67,8 +77,8 @@ class ShortTermMemory:
             return []
         
         try:
-            # Gerar embedding da mensagem atual
-            current_embedding = self.embedding_model.encode(current_message)
+            # Gerar embedding da mensagem atual sem progresso
+            current_embedding = self.embedding_model.encode(current_message, show_progress_bar=False)
             
             # Calcular similaridades
             similarities = []
@@ -137,26 +147,27 @@ class ShortTermMemory:
         import numpy as np
         return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
     
-    def is_duplicate_response(self, new_response: str, intent_tag: str = None, similarity_threshold: float = 0.8) -> bool:
+    def is_duplicate_response(self, new_response: str, intent_tag: str = None, similarity_threshold: float = 0.9) -> bool:
         """
         Verifica se a nova resposta é muito similar às respostas recentes
+        Threshold mais alto (0.9) para ser menos agressivo na detecção de duplicatas
         """
         if not self.turns:
             return False
         
         try:
-            # Gerar embedding da nova resposta
-            new_response_embedding = self.embedding_model.encode(new_response)
+            # Gerar embedding da nova resposta sem progresso
+            new_response_embedding = self.embedding_model.encode(new_response, show_progress_bar=False)
             
-            # Verificar as últimas 3 respostas
-            recent_responses = self.turns[-3:]
+            # Verificar apenas as últimas 2 respostas (ao invés de 3)
+            recent_responses = self.turns[-2:]
             
             for turn in recent_responses:
-                # Calcular similaridade com a resposta anterior
-                response_embedding = self.embedding_model.encode(turn.bot_response)
+                # Calcular similaridade com a resposta anterior sem progresso
+                response_embedding = self.embedding_model.encode(turn.bot_response, show_progress_bar=False)
                 similarity = self._cosine_similarity(new_response_embedding, response_embedding)
                 
-                # Se for muito similar, considerar duplicata
+                # Threshold mais alto para ser menos agressivo
                 if similarity > similarity_threshold:
                     logger.info(f"Resposta duplicada detectada! Similaridade: {similarity:.3f}")
                     return True
@@ -164,8 +175,9 @@ class ShortTermMemory:
                 # Verificar se é o mesmo intent sendo repetido muito rapidamente
                 if intent_tag and turn.intent_tag == intent_tag:
                     time_diff = (datetime.now() - turn.timestamp).total_seconds()
-                    if time_diff < 30:  # Menos de 30 segundos
-                        logger.info(f"Mesmo intent repetido muito rapidamente: {intent_tag}")
+                    # Aumentar o tempo para 60 segundos (ao invés de 30)
+                    if time_diff < 60:
+                        logger.info(f"Mesmo intent repetido rapidamente: {intent_tag} (há {time_diff:.1f}s)")
                         return True
             
             return False
@@ -196,45 +208,8 @@ class ShortTermMemory:
         if unused_responses:
             return random.choice(unused_responses)
         
-        # Se todas foram usadas, criar uma resposta contextual
-        return self._create_contextual_alternative(intent_tag)
-    
-    def _create_contextual_alternative(self, intent_tag: str) -> str:
-        """
-        Cria uma resposta alternativa contextual
-        """
-        alternatives = {
-            'calendario_academico': [
-                "Aqui estão as informações atualizadas sobre o calendário acadêmico:",
-                "Vou te mostrar os detalhes do calendário acadêmico novamente:",
-                "Confira estas informações importantes sobre o calendário:"
-            ],
-            'cardapio': [
-                "Vou mostrar o cardápio novamente para você:",
-                "Aqui está o cardápio atualizado:",
-                "Confira o cardápio do restaurante:"
-            ],
-            'horario': [
-                "Aqui estão as informações sobre horários:",
-                "Vou te ajudar com os horários novamente:",
-                "Confira os horários atualizados:"
-            ]
-        }
-        
-        # Tentar encontrar alternativa específica
-        for key, alts in alternatives.items():
-            if key in intent_tag.lower():
-                return random.choice(alts)
-        
-        # Alternativa genérica
-        generic_alternatives = [
-            "Deixe-me te ajudar com isso novamente:",
-            "Aqui estão as informações que você precisa:",
-            "Vou te mostrar esses detalhes:",
-            "Confira essas informações importantes:"
-        ]
-        
-        return random.choice(generic_alternatives)
+        # Se todas foram usadas, retornar uma resposta genérica
+        return "Deixe-me te ajudar com isso novamente:"
     
     def clear(self):
         """Limpa a memória de curto prazo"""
@@ -256,6 +231,7 @@ class SemanticChatBot:
         Inicializa o chatbot semântico usando ChromaDB e all-MiniLM-L6-v2
         """
         self.bot_name = "Bot IFRS"
+        self.intents_file = intents_file
         self.knowledge_base = KnowledgeBase()
         
         # Inicializar memória de curto prazo
@@ -279,8 +255,7 @@ class SemanticChatBot:
     
     def get_response_with_context(self, user_message, conversation_history=None, similarity_threshold=0.6):
         """
-        Gera resposta usando busca semântica considerando o contexto da conversa
-        Com sistema de sugestões quando há baixa certeza e memória de curto prazo
+        Gera resposta usando busca semântica otimizada com contexto
         """
         try:
             # Normalizar mensagem do usuário
@@ -288,295 +263,177 @@ class SemanticChatBot:
             
             logger.info(f"Processando mensagem: '{user_message}' -> '{normalized_message}'")
             
-            # 1. USAR MEMÓRIA DE CURTO PRAZO PARA ENRIQUECER O CONTEXTO
-            relevant_memory = self.short_term_memory.get_relevant_context(user_message, max_relevant=3)
-            contextual_keywords = self.short_term_memory.get_contextual_keywords(user_message)
-            
-            if relevant_memory:
-                logger.info(f"Memória de curto prazo: {len(relevant_memory)} turnos relevantes encontrados")
-                logger.info(f"Palavras-chave contextuais: {contextual_keywords}")
-            
-            # 2. ENRIQUECER QUERY COM CONTEXTO DA MEMÓRIA
-            enriched_query = self._enrich_query_with_memory(normalized_message, relevant_memory, contextual_keywords)
-            
+            # 1. VERIFICAR SE É SELEÇÃO DE OPÇÃO NUMÉRICA
             if conversation_history:
-                logger.info(f"Contexto da conversa incluído: {len(conversation_history)} mensagens anteriores")
-                # Analisar contexto para debug
-                context_analysis = self._analyze_conversation_context(conversation_history)
-                
-                # Verificar se o usuário está selecionando uma opção numérica
                 option_response = self._check_option_selection(user_message, conversation_history)
                 if option_response:
-                    # Armazenar na memória antes de retornar
                     self.short_term_memory.add_turn(user_message, option_response)
                     return option_response
             
-            # 3. BUSCAR COM QUERY ENRIQUECIDA PELA MEMÓRIA
-            logger.info(f"Tentativa 1: Busca com query enriquecida pela memória (threshold: {similarity_threshold})")
+            # 2. BUSCA PRINCIPAL COM CONTEXTO OTIMIZADO
+            # Usar memória de curto prazo para enriquecer moderadamente
+            relevant_memory = self.short_term_memory.get_relevant_context(user_message, max_relevant=2)
+            
+            # Criar query enriquecida de forma mais seletiva
+            search_query = self._create_optimized_query(normalized_message, relevant_memory, conversation_history)
+            
+            logger.info(f"Busca principal (threshold: {similarity_threshold})")
             result = self.knowledge_base.search_similar_intent(
-                enriched_query, 
+                search_query, 
                 n_results=5,
                 similarity_threshold=similarity_threshold
             )
             
-            # 4. FALLBACK: Se não encontrou com memória, tentar com query original
-            if not result:
-                logger.info("Tentativa 2: Busca com mensagem original...")
+            # 3. FALLBACK SIMPLES SE NECESSÁRIO
+            if not result and search_query != normalized_message:
+                logger.info("Fallback: Busca com mensagem original")
                 result = self.knowledge_base.search_similar_intent(
                     normalized_message, 
-                    n_results=5,
-                    similarity_threshold=similarity_threshold
-                )
-            
-            # 5. FALLBACK: Se não encontrou resultado satisfatório, tentar com contexto da conversa
-            if not result and conversation_history:
-                logger.info("Tentativa 3: Busca com contexto da conversa...")
-                enriched_message = self._enrich_message_with_context(user_message, conversation_history)
-                result = self.knowledge_base.search_similar_intent(
-                    enriched_message, 
                     n_results=5,
                     similarity_threshold=similarity_threshold - 0.1
                 )
             
-            # 6. FALLBACK: Usar palavras-chave do contexto histórico
-            if not result and conversation_history:
-                logger.info("Tentativa 4: Busca com palavras-chave do contexto...")
-                context_keywords = self._extract_context_keywords(conversation_history)
-                if context_keywords:
-                    keyword_query = f"{user_message} {' '.join(context_keywords)}"
-                    normalized_keyword_query = self.normalize_text(keyword_query)
-                    logger.info(f"Query com palavras-chave: '{normalized_keyword_query}'")
-                    result = self.knowledge_base.search_similar_intent(
-                        normalized_keyword_query, 
-                        n_results=5,
-                        similarity_threshold=similarity_threshold - 0.2
-                    )
-            
-            # 7. ÚLTIMO FALLBACK: Busca com threshold muito baixo
+            # 4. ÚLTIMO FALLBACK COM THRESHOLD BAIXO
             if not result:
-                logger.info("Tentativa 5: Busca com threshold muito baixo...")
-                low_threshold_result = self.knowledge_base.search_similar_intent(
+                logger.info("Último fallback: Busca com threshold baixo")
+                result = self.knowledge_base.search_similar_intent(
                     normalized_message, 
                     n_results=5,
-                    similarity_threshold=-0.5  # Threshold muito baixo para pegar qualquer resultado
+                    similarity_threshold=0.3
                 )
-                if low_threshold_result:
-                    logger.info(f"Resultado encontrado com threshold baixo: similaridade {low_threshold_result['similarity']:.3f}")
-                    # Se encontrou resultado com threshold baixo, oferecer opções
-                    if low_threshold_result['similarity'] < 0.5:
-                        logger.info("Oferecendo opções devido à baixa similaridade...")
-                        return self._offer_similar_options(normalized_message, low_threshold_result, conversation_history)
-                    else:
-                        result = low_threshold_result
-            
-            if result:
-                metadata = result['metadata']
-                similarity = result['similarity']
                 
-                logger.info(f"Intenção encontrada: '{metadata['tag']}' (similaridade: {similarity:.3f})")
-                
-                # Verificar se a similaridade é baixa e oferecer opções
-                if similarity < 0.5:  # Threshold de incerteza
-                    logger.info(f"Similaridade baixa ({similarity:.3f}), oferecendo opções alternativas...")
+                if result and result['similarity'] < 0.5:
+                    logger.info("Similaridade baixa, oferecendo opções...")
                     return self._offer_similar_options(normalized_message, result, conversation_history)
-                
-                # Decodificar respostas do JSON
-                responses = json.loads(metadata['responses'])
-                
-                # Verificar se a resposta seria duplicada
-                potential_response = random.choice(responses)
-                
-                # Verificar duplicata antes de personalizar
-                if self.short_term_memory.is_duplicate_response(potential_response, metadata['tag']):
-                    logger.info("Resposta duplicada detectada, buscando alternativa...")
-                    # Tentar uma resposta alternativa
-                    alternative_response = self.short_term_memory.get_alternative_response(metadata['tag'], responses)
-                    response = alternative_response
-                else:
-                    response = potential_response
-                
-                # Personalizar resposta baseada no contexto
-                response = self._personalize_response_with_context(response, conversation_history)
-                
-                # Adicionar link se existir
-                if metadata.get('link'):
-                    if metadata['tag'] == 'cardapio':
-                        # Para cardápio, obter link dinâmico
-                        dynamic_link = self.get_dynamic_link(metadata['link'])
-                        
-                        if dynamic_link and dynamic_link != metadata['link']:
-                            # Link dinâmico obtido com sucesso
-                            response += f"""
-                            <div class="cardapio-container">
-                                <div class="cardapio-header">
-                                    <h3>📍 Cardápio do Restaurante IFRS</h3>
-                                    <p>Confira as opções de hoje:</p>
-                                </div>
-                                <div class="cardapio-image-wrapper">
-                                    <img src='{dynamic_link}' alt='Cardápio do dia' class='cardapio-image' onclick='openCardapioModal(this)' onerror='this.style.display="none"; this.parentElement.innerHTML="<p style=\"text-align: center; padding: 20px; color: #666;\">Imagem do cardápio não disponível no momento</p>";'>
-                                    <div class="cardapio-overlay">
-                                        <span>Clique para ampliar</span>
-                                    </div>
-                                </div>
-                                <div class="cardapio-actions">
-                                    <a href='https://ifrs.edu.br/sertao/assistencia-estudantil/restaurante/cardapio/' target='_blank' class='cardapio-link'>
-                                        🔗 Ver no site oficial
-                                    </a>
-                                </div>
-                            </div>
-                            """
-                        else:
-                            # Fallback quando não conseguir obter o link dinâmico
-                            response += f"""
-                            <div class="cardapio-container">
-                                <div class="cardapio-header">
-                                    <h3>📍 Cardápio do Restaurante IFRS</h3>
-                                    <p>Informações sobre o cardápio:</p>
-                                </div>
-                                <div class="cardapio-fallback">
-                                    <p>🍽️ O cardápio não está disponível para visualização no momento.</p>
-                                    <p>Você pode consultar diretamente no site oficial ou comparecer ao restaurante.</p>
-                                </div>
-                                <div class="cardapio-actions">
-                                    <a href='https://ifrs.edu.br/sertao/assistencia-estudantil/restaurante/cardapio/' target='_blank' class='cardapio-link'>
-                                        🔗 Ver no site oficial
-                                    </a>
-                                </div>
-                            </div>
-                            """
-                    else:
-                        # Para outros links estáticos
-                        response += f" {metadata['link']}"
-                
-                # Verificação final de duplicata após adicionar links
-                final_response = response
-                if self.short_term_memory.is_duplicate_response(final_response, metadata['tag'], similarity_threshold=0.7):
-                    logger.info("Resposta final duplicada detectada, adicionando variação...")
-                    # Adicionar uma pequena variação para evitar duplicata exata
-                    variation_prefixes = [
-                        "Aqui está novamente: ",
-                        "Conforme solicitado: ",
-                        "Vou te mostrar: ",
-                        "Estas são as informações: "
-                    ]
-                    final_response = random.choice(variation_prefixes) + final_response
-                
-                # Adicionar à memória de curto prazo
-                self.short_term_memory.add_turn(user_message, final_response, metadata['tag'], similarity)
-                
-                return final_response
+            
+            # 5. PROCESSAR RESULTADO
+            if result:
+                return self._process_search_result(result, user_message, conversation_history)
             else:
-                logger.info("Nenhuma intenção similar encontrada em todas as tentativas")
-                # Última tentativa: oferecer opções baseadas em busca ampla
-                try:
-                    logger.info("Tentativa final: Busca ampla para sugestões...")
-                    final_options = self._offer_similar_options(normalized_message, None, conversation_history)
-                    if "Não tenho certeza do que você está procurando" in final_options:
-                        return final_options
-                except:
-                    pass
-                
+                logger.info("Nenhuma intenção encontrada")
                 return self._get_contextual_fallback_response(conversation_history)
                 
         except Exception as e:
             logger.error(f"Erro ao processar mensagem: {str(e)}")
             return "Desculpe, ocorreu um erro interno. Tente novamente."
-
-    def _extract_context_keywords(self, conversation_history):
+    
+    def _create_optimized_query(self, message, relevant_memory, conversation_history):
         """
-        Extrai palavras-chave relevantes do contexto da conversa buscando no ChromaDB
+        Cria query otimizada sem sobrecarregar com palavras-chave desnecessárias
         """
-        keywords = []
+        # Se não há contexto relevante, retornar mensagem original
+        if not relevant_memory and not conversation_history:
+            return message
         
-        # Coletar todas as mensagens do usuário no histórico
-        user_messages = []
-        for msg in conversation_history[-3:]:  # Últimas 3 mensagens
-            if msg['type'] == 'user':
-                user_messages.append(msg['message'])
+        # Adicionar apenas 1-2 palavras-chave mais relevantes da memória
+        context_words = []
+        if relevant_memory:
+            for turn in relevant_memory[:1]:  # Apenas o turno mais relevante
+                if turn.intent_tag:
+                    # Pegar apenas a palavra principal da tag
+                    tag_words = turn.intent_tag.replace('_', ' ').split()
+                    if tag_words:
+                        context_words.append(tag_words[0])
         
-        if not user_messages:
-            return keywords
+        # Adicionar contexto da conversa atual se relevante
+        if conversation_history:
+            recent_context = self._get_recent_context_keywords(conversation_history, max_words=1)
+            context_words.extend(recent_context)
         
-        # Para cada mensagem do usuário, tentar buscar no ChromaDB
-        for message in user_messages:
-            try:
-                # Normalizar a mensagem
-                normalized_msg = self.normalize_text(message)
-                
-                # Buscar diretamente no ChromaDB
-                results = self.knowledge_base.collection.query(
-                    query_texts=[normalized_msg],
-                    n_results=2,  # Pegar 2 resultados mais similares
-                    include=['documents', 'metadatas', 'distances']
-                )
-                
-                if results['documents'] and results['documents'][0]:
-                    for doc, metadata, distance in zip(
-                        results['documents'][0],
-                        results['metadatas'][0], 
-                        results['distances'][0]
-                    ):
-                        # Extrair palavras da tag da intenção encontrada
-                        intent_tag = metadata.get('tag', '')
-                        
-                        # Dividir a tag em palavras e adicionar às keywords
-                        tag_words = intent_tag.replace('_', ' ').split()
-                        for word in tag_words:
-                            normalized_word = self.normalize_text(word)
-                            if len(normalized_word) > 2 and normalized_word not in keywords:
-                                keywords.append(normalized_word)
-                        
-                        # Também extrair palavras importantes do próprio documento encontrado
-                        doc_words = doc.lower().split()
-                        important_doc_words = [w for w in doc_words if len(w) > 3 and w not in 
-                                             ['para', 'como', 'onde', 'quando', 'porque', 'qual', 'quem', 'que', 'isso', 'esta', 'esse', 'sao', 'tem', 'esta', 'voce', 'quero', 'preciso']]
-                        
-                        for word in important_doc_words[:2]:  # Máximo 2 palavras por documento
-                            normalized_word = self.normalize_text(word)
-                            if normalized_word not in keywords:
-                                keywords.append(normalized_word)
-                            
-            except Exception as e:
-                logger.debug(f"Erro ao extrair keywords da mensagem '{message}': {str(e)}")
-                continue
+        # Limitar a 2 palavras adicionais para não sobrecarregar
+        context_words = list(set(context_words))[:2]
         
-        # Limitar a 5 palavras-chave para não sobrecarregar
-        keywords = list(set(keywords))[:5]  # Remove duplicatas e limita
+        if context_words:
+            enriched_query = f"{message} {' '.join(context_words)}"
+            logger.info(f"Query enriquecida: '{message}' -> '{enriched_query}'")
+            return enriched_query
         
-        logger.info(f"Palavras-chave extraídas do ChromaDB: {keywords}")
-        return keywords
-
-    def _enrich_message_with_context(self, current_message, conversation_history):
+        return message
+    
+    def _get_recent_context_keywords(self, conversation_history, max_words=2):
         """
-        Enriquece a mensagem atual com palavras-chave do contexto buscando no ChromaDB
+        Extrai palavras-chave relevantes do contexto recente de forma otimizada
         """
         if not conversation_history:
-            return self.normalize_text(current_message)
+            return []
         
-        # Extrair palavras importantes das últimas mensagens do usuário
-        context_keywords = []
-        for msg in conversation_history[-3:]:  # Apenas últimas 3 mensagens
-            if msg['type'] == 'user':
-                # Buscar termos similares no ChromaDB para cada palavra importante
-                words = msg['message'].lower().split()
-                important_words = [w for w in words if len(w) > 3 and w not in 
-                                 ['para', 'como', 'onde', 'quando', 'porque', 'qual', 'quem', 'que', 'isso', 'esta', 'esse']]
-                
-                for word in important_words[:2]:  # Máximo 2 palavras por mensagem
-                    # Buscar termos similares no ChromaDB
-                    similar_terms = self._get_similar_terms_from_db(word)
-                    context_keywords.extend(similar_terms)
+        keywords = []
+        # Analisar apenas as últimas 2 mensagens do usuário
+        user_messages = [msg for msg in conversation_history[-4:] if msg['type'] == 'user'][-2:]
         
-        # Combinar mensagem atual com palavras-chave do contexto
-        if context_keywords:
-            # Remover duplicatas e limitar
-            unique_keywords = list(set(context_keywords))[:3]
-            enriched = f"{current_message} {' '.join(unique_keywords)}"
-            logger.info(f"Mensagem enriquecida com ChromaDB: '{current_message}' -> '{enriched}'")
-        else:
-            enriched = current_message
+        for msg in user_messages:
+            words = msg['message'].lower().split()
+            # Filtrar palavras relevantes (substantivos importantes)
+            relevant_words = [w for w in words if len(w) > 3 and w not in 
+                            ['para', 'como', 'onde', 'quando', 'porque', 'qual', 'quem', 'que', 
+                             'isso', 'esta', 'esse', 'quero', 'preciso', 'gostaria', 'pode', 'voce']]
+            
+            if relevant_words:
+                keywords.append(relevant_words[0])  # Apenas a primeira palavra relevante
         
-        return self.normalize_text(enriched)
+        return keywords[:max_words]
+    
+    def _process_search_result(self, result, user_message, conversation_history):
+        """
+        Processa o resultado da busca e gera resposta final
+        """
+        try:
+            metadata = result['metadata']
+            similarity = result['similarity']
+            
+            logger.info(f"Intenção encontrada: '{metadata['tag']}' (similaridade: {similarity:.3f})")
+            
+            # Verificar se a similaridade é baixa
+            if similarity < 0.5:
+                logger.info(f"Similaridade baixa ({similarity:.3f}), oferecendo opções...")
+                return self._offer_similar_options(self.normalize_text(user_message), result, conversation_history)
+            
+            # Decodificar respostas
+            responses = json.loads(metadata['responses'])
+            
+            # Selecionar resposta considerando duplicatas com threshold mais relaxado
+            selected_response = self._select_response_avoiding_duplicates(responses, metadata['tag'], threshold=0.85)
+            
+            # Personalizar resposta com contexto se necessário
+            final_response = self._personalize_response_with_context(selected_response, conversation_history)
+            
+            # Adicionar link se existir
+            if metadata.get('link'):
+                final_response = self._add_link_to_response(final_response, metadata)
+            
+            # Adicionar à memória
+            self.short_term_memory.add_turn(user_message, final_response, metadata['tag'], similarity)
+            
+            return final_response
+            
+        except Exception as e:
+            logger.error(f"Erro ao processar resultado: {str(e)}")
+            return "Desculpe, ocorreu um erro ao processar sua solicitação."
+    
+    def _select_response_avoiding_duplicates(self, responses, intent_tag, threshold=0.85):
+        """
+        Seleciona resposta evitando duplicatas com threshold mais relaxado
+        """
+        # Tentar primeiro uma resposta aleatória
+        potential_response = random.choice(responses)
+        
+        # Verificar duplicata apenas se for muito similar (threshold mais alto)
+        if not self.short_term_memory.is_duplicate_response(potential_response, intent_tag, threshold):
+            return potential_response
+        
+        # Se for duplicata, tentar outras respostas
+        for response in responses:
+            if not self.short_term_memory.is_duplicate_response(response, intent_tag, threshold):
+                return response
+        
+        # Se todas são duplicatas, adicionar uma pequena variação
+        variation_prefixes = [
+            "Como mencionado: ",
+            "Relembrando: ",
+            "Conforme informado: "
+        ]
+        
+        return random.choice(variation_prefixes) + potential_response
 
     def _build_context_message(self, current_message, conversation_history):
         """
@@ -1277,35 +1134,6 @@ class SemanticChatBot:
         
         return formatted
 
-    def _enrich_query_with_memory(self, query: str, relevant_memory: List[ConversationTurn], contextual_keywords: List[str]) -> str:
-        """
-        Enriquece a query com informações da memória de curto prazo
-        """
-        enriched_parts = [query]
-        
-        # Adicionar palavras-chave do contexto da memória
-        if contextual_keywords:
-            enriched_parts.extend(contextual_keywords[:3])  # Máximo 3 palavras-chave
-            logger.info(f"Adicionadas palavras-chave da memória: {contextual_keywords[:3]}")
-        
-        # Adicionar contexto dos turnos mais relevantes
-        if relevant_memory:
-            for turn in relevant_memory[:2]:  # Máximo 2 turnos mais relevantes
-                # Adicionar intent_tag se disponível
-                if turn.intent_tag:
-                    enriched_parts.append(turn.intent_tag.replace('_', ' '))
-                
-                # Adicionar palavras importantes da mensagem anterior
-                important_words = self._extract_important_words(turn.user_message)
-                enriched_parts.extend(important_words[:2])  # Máximo 2 palavras por turno
-        
-        enriched_query = " ".join(enriched_parts)
-        
-        if enriched_query != query:
-            logger.info(f"Query enriquecida: '{query}' -> '{enriched_query}'")
-        
-        return enriched_query
-    
     def _extract_important_words(self, text: str) -> List[str]:
         """
         Extrai palavras importantes de um texto
@@ -1349,6 +1177,387 @@ class SemanticChatBot:
             summary += f", similaridade média: {stats['avg_similarity']:.2f}"
         
         return summary
+
+    def _analyze_contextual_intent(self, current_message, conversation_history):
+        """
+        Analisa o contexto da conversa para identificar intenções relacionadas dinamicamente
+        baseando-se nos padrões das intenções carregadas do intents.json
+        """
+        if not conversation_history:
+            return current_message
+        
+        try:
+            # Obter todas as intenções da base de conhecimento (carregamento eficiente do JSON)
+            all_intents = self.knowledge_base.get_intents_from_json(self.intents_file)
+            
+            # Analisar as últimas 3 mensagens do usuário
+            user_messages = [msg['message'].lower() for msg in conversation_history[-3:] if msg['type'] == 'user']
+            current_lower = current_message.lower()
+            
+            # Buscar padrões contextuais dinâmicos
+            for intent_data in all_intents:
+                tag = intent_data['tag']
+                patterns = [p.lower() for p in intent_data.get('patterns', [])]
+                
+                # Verificar se alguma mensagem anterior corresponde a padrões desta intenção
+                previous_intent_match = any(
+                    any(self._contains_pattern_words(msg, pattern) for pattern in patterns)
+                    for msg in user_messages
+                )
+                
+                if previous_intent_match:
+                    # Verificar se a mensagem atual pode ser uma continuação contextual
+                    enhanced_query = self._build_contextual_query(current_message, tag, intent_data)
+                    if enhanced_query and enhanced_query != current_message:
+                        logger.info(f"Contexto dinâmico detectado: '{tag}' + '{current_message}' -> '{enhanced_query}'")
+                        return enhanced_query
+            
+            # Verificar o contexto inverso - mensagem atual pode ser uma intenção, e anterior pode ser contexto
+            current_intent_matches = []
+            for intent_data in all_intents:
+                tag = intent_data['tag']
+                patterns = [p.lower() for p in intent_data.get('patterns', [])]
+                
+                if any(self._contains_pattern_words(current_lower, pattern) for pattern in patterns):
+                    current_intent_matches.append(intent_data)
+            
+            # Para cada intenção que corresponde à mensagem atual, verificar contexto anterior
+            for current_intent in current_intent_matches:
+                enhanced_query = self._build_reverse_contextual_query(current_message, current_intent, user_messages, all_intents)
+                if enhanced_query and enhanced_query != current_message:
+                    logger.info(f"Contexto inverso dinâmico detectado: mensagens anteriores + '{current_message}' -> '{enhanced_query}'")
+                    return enhanced_query
+            
+            return current_message
+            
+        except Exception as e:
+            logger.error(f"Erro na análise contextual dinâmica: {str(e)}")
+            return current_message
+
+    def _detect_sequential_context(self, current_message, conversation_history):
+        """
+        Detecta contexto sequencial específico dinamicamente baseado nas intenções do intents.json
+        """
+        if not conversation_history:
+            return current_message
+        
+        try:
+            # Obter todas as intenções da base de conhecimento (carregamento eficiente do JSON)
+            all_intents = self.knowledge_base.get_intents_from_json(self.intents_file)
+            
+            # Verificar últimas 2 mensagens do usuário
+            recent_user_messages = [msg['message'].lower() for msg in conversation_history[-2:] if msg['type'] == 'user']
+            current_lower = current_message.lower()
+            
+            # Criar mapeamento dinâmico de intenções relacionadas
+            related_intents = self._find_related_intents(all_intents)
+            
+            # Verificar padrões sequenciais dinâmicos
+            for intent_group in related_intents:
+                enhanced_query = self._check_sequential_pattern(
+                    current_lower, recent_user_messages, intent_group, all_intents
+                )
+                if enhanced_query and enhanced_query != current_message:
+                    logger.info(f"Padrão sequencial dinâmico detectado: {enhanced_query}")
+                    return enhanced_query
+            
+            return current_message
+            
+        except Exception as e:
+            logger.error(f"Erro na detecção sequencial dinâmica: {str(e)}")
+            return current_message
+    
+    def _contains_pattern_words(self, message, pattern):
+        """
+        Verifica se a mensagem contém palavras-chave significativas do padrão
+        """
+        # Dividir padrão em palavras e remover palavras comuns
+        pattern_words = pattern.lower().split()
+        significant_words = [word for word in pattern_words if len(word) > 2 and 
+                           word not in ['que', 'com', 'para', 'por', 'uma', 'dos', 'das', 'meu', 'minha', 'onde', 'como', 'quando']]
+        
+        if not significant_words:
+            return False
+        
+        # Verificar se pelo menos uma palavra significativa está na mensagem
+        return any(word in message.lower() for word in significant_words)
+    
+    def _build_contextual_query(self, current_message, previous_intent_tag, previous_intent_data):
+        """
+        Constrói uma query contextual baseada na intenção anterior e mensagem atual
+        """
+        try:
+            # Mapeamento dinâmico baseado nos tags das intenções
+            contextual_mappings = {
+                'restaurante': ['horário', 'horarios', 'hora', 'tempo', 'funciona', 'abre', 'fecha', 'quando'],
+                'cardapio': ['hoje', 'semana', 'amanhã', 'segunda', 'terça', 'quarta', 'quinta', 'sexta'],
+                'horario': ['restaurante', 'comida', 'refeição', 'almoço', 'jantar', 'café'],
+                'aula': ['horário', 'horarios', 'sala', 'onde', 'quando', 'tempo'],
+                'biblioteca': ['livro', 'emprestimo', 'renovar', 'devolver', 'acervo'],
+                'campus': ['mapa', 'localização', 'onde', 'como', 'chegar'],
+                'sigaa': ['acesso', 'login', 'senha', 'como', 'entrar'],
+                'moodle': ['acesso', 'login', 'senha', 'como', 'entrar']
+            }
+            
+            current_lower = current_message.lower()
+            
+            # Buscar por palavras-chave relacionadas na mensagem atual
+            for base_tag, keywords in contextual_mappings.items():
+                if base_tag in previous_intent_tag.lower():
+                    if any(keyword in current_lower for keyword in keywords):
+                        # Construir query contextual baseada nos padrões da intenção
+                        return self._create_enhanced_query(previous_intent_tag, current_message, previous_intent_data)
+            
+            return current_message
+            
+        except Exception as e:
+            logger.error(f"Erro ao construir query contextual: {str(e)}")
+            return current_message
+    
+    def _build_reverse_contextual_query(self, current_message, current_intent, user_messages, all_intents):
+        """
+        Constrói uma query contextual reversa (mensagem atual é intenção, anterior é contexto)
+        """
+        try:
+            current_tag = current_intent['tag']
+            
+            # Buscar intenções relacionadas nas mensagens anteriores
+            for msg in user_messages:
+                for intent_data in all_intents:
+                    patterns = [p.lower() for p in intent_data.get('patterns', [])]
+                    if any(self._contains_pattern_words(msg, pattern) for pattern in patterns):
+                        # Verificar se há relação entre as intenções
+                        if self._are_intents_related(intent_data['tag'], current_tag):
+                            return self._create_enhanced_query(intent_data['tag'], current_message, current_intent)
+            
+            return current_message
+            
+        except Exception as e:
+            logger.error(f"Erro ao construir query contextual reversa: {str(e)}")
+            return current_message
+    
+    def _are_intents_related(self, tag1, tag2):
+        """
+        Verifica se duas intenções são relacionadas dinamicamente
+        """
+        # Grupos de intenções relacionadas baseadas em análise semântica
+        related_groups = [
+            ['restaurante', 'cardapio', 'horarios_restaurante', 'reserva_restaurante'],
+            ['horario', 'calendario_academico', 'aula'],
+            ['biblioteca', 'renovar_livros', 'devolver_livros', 'biblioteca_virtual'],
+            ['sigaa', 'moodle', 'campus_digital'],
+            ['auxilio', 'tipos_auxilio', 'edital_auxilio']
+        ]
+        
+        # Verificar se as tags estão no mesmo grupo
+        for group in related_groups:
+            if any(tag1.lower() in tag.lower() or tag.lower() in tag1.lower() for tag in group) and \
+               any(tag2.lower() in tag.lower() or tag.lower() in tag2.lower() for tag in group):
+                return True
+        
+        # Verificar similaridade por palavras-chave
+        tag1_words = set(tag1.lower().replace('_', ' ').split())
+        tag2_words = set(tag2.lower().replace('_', ' ').split())
+        
+        # Se têm palavras em comum, podem ser relacionadas
+        return bool(tag1_words & tag2_words)
+    
+    def _create_enhanced_query(self, context_tag, current_message, intent_data):
+        """
+        Cria uma query enriquecida baseada no contexto e intenção
+        """
+        try:
+            # Usar padrões da intenção para criar query mais específica
+            patterns = intent_data.get('patterns', [])
+            
+            # Selecionar padrão mais específico
+            most_specific_pattern = max(patterns, key=len) if patterns else ""
+            
+            # Construir query enriquecida
+            if 'restaurante' in context_tag.lower():
+                if any(word in current_message.lower() for word in ['horário', 'horarios', 'hora', 'tempo']):
+                    return 'horários do restaurante estudantil'
+                elif any(word in current_message.lower() for word in ['cardápio', 'cardapio', 'comida']):
+                    return 'cardápio do restaurante'
+                elif any(word in current_message.lower() for word in ['reserva', 'reservar']):
+                    return 'reserva do restaurante'
+            
+            elif 'horario' in context_tag.lower():
+                if any(word in current_message.lower() for word in ['restaurante', 'comida', 'refeição']):
+                    return 'horários do restaurante'
+                elif any(word in current_message.lower() for word in ['aula', 'sala', 'curso']):
+                    return 'horários de aula'
+            
+            elif 'biblioteca' in context_tag.lower():
+                if any(word in current_message.lower() for word in ['renovar', 'renovação']):
+                    return 'renovar livros biblioteca'
+                elif any(word in current_message.lower() for word in ['devolver', 'devolução']):
+                    return 'devolver livros biblioteca'
+            
+            # Fallback: combinar contexto com mensagem atual
+            return f"{context_tag.replace('_', ' ')} {current_message}"
+            
+        except Exception as e:
+            logger.error(f"Erro ao criar query enriquecida: {str(e)}")
+            return current_message
+    
+    def _find_related_intents(self, all_intents):
+        """
+        Encontra grupos de intenções relacionadas dinamicamente
+        """
+        try:
+            related_groups = []
+            
+            # Agrupar intenções por palavras-chave similares
+            keyword_groups = {}
+            
+            for intent_data in all_intents:
+                tag = intent_data['tag']
+                patterns = intent_data.get('patterns', [])
+                
+                # Extrair palavras-chave dos padrões
+                keywords = set()
+                for pattern in patterns:
+                    words = pattern.lower().replace('?', '').replace('.', '').split()
+                    significant_words = [w for w in words if len(w) > 3 and 
+                                       w not in ['para', 'como', 'onde', 'quando', 'porque', 'qual', 'quem', 'que', 'isso', 'esta', 'esse', 'meus', 'minha', 'tenho']]
+                    keywords.update(significant_words)
+                
+                # Agrupar por palavras-chave principais
+                for keyword in keywords:
+                    if keyword not in keyword_groups:
+                        keyword_groups[keyword] = []
+                    keyword_groups[keyword].append(intent_data)
+            
+            # Converter grupos em lista de intenções relacionadas
+            for keyword, intents in keyword_groups.items():
+                if len(intents) > 1:  # Só agrupar se houver mais de uma intenção
+                    related_groups.append(intents)
+            
+            return related_groups
+            
+        except Exception as e:
+            logger.error(f"Erro ao encontrar intenções relacionadas: {str(e)}")
+            return []
+    
+    def _check_sequential_pattern(self, current_message, recent_messages, intent_group, all_intents):
+        """
+        Verifica padrões sequenciais em um grupo de intenções relacionadas
+        """
+        try:
+            # Para cada intenção no grupo, verificar se houve menção anterior
+            for intent_data in intent_group:
+                tag = intent_data['tag']
+                patterns = [p.lower() for p in intent_data.get('patterns', [])]
+                
+                # Verificar se alguma mensagem anterior corresponde aos padrões desta intenção
+                previous_match = any(
+                    any(self._contains_pattern_words(msg, pattern) for pattern in patterns)
+                    for msg in recent_messages
+                )
+                
+                if previous_match:
+                    # Verificar se a mensagem atual pode ser uma continuação
+                    for other_intent in intent_group:
+                        if other_intent['tag'] != tag:
+                            other_patterns = [p.lower() for p in other_intent.get('patterns', [])]
+                            if any(self._contains_pattern_words(current_message, pattern) for pattern in other_patterns):
+                                # Encontrou padrão sequencial
+                                return self._create_sequential_query(tag, other_intent['tag'], current_message)
+            
+            return current_message
+            
+        except Exception as e:
+            logger.error(f"Erro ao verificar padrão sequencial: {str(e)}")
+            return current_message
+    
+    def _create_sequential_query(self, previous_tag, current_tag, current_message):
+        """
+        Cria uma query sequencial baseada em duas intenções relacionadas
+        """
+        try:
+            # Mapeamento de combinações sequenciais
+            sequential_combinations = {
+                ('restaurante', 'horarios_restaurante'): 'horários do restaurante estudantil',
+                ('restaurante', 'cardapio'): 'cardápio do restaurante',
+                ('horario', 'restaurante'): 'horários do restaurante',
+                ('aula', 'horario'): 'horários de aula',
+                ('biblioteca', 'renovar_livros'): 'renovar livros biblioteca',
+                ('biblioteca', 'devolver_livros'): 'devolver livros biblioteca',
+                ('sigaa', 'acesso'): 'acesso sigaa',
+                ('moodle', 'acesso'): 'acesso moodle'
+            }
+            
+            # Buscar combinação específica
+            for (tag1, tag2), result in sequential_combinations.items():
+                if (tag1 in previous_tag.lower() and tag2 in current_tag.lower()) or \
+                   (tag2 in previous_tag.lower() and tag1 in current_tag.lower()):
+                    return result
+            
+            # Fallback: combinar tags de forma genérica
+            return f"{previous_tag.replace('_', ' ')} {current_tag.replace('_', ' ')}"
+            
+        except Exception as e:
+            logger.error(f"Erro ao criar query sequencial: {str(e)}")
+            return current_message
+
+    def _add_link_to_response(self, response, metadata):
+        """
+        Adiciona link à resposta baseado no tipo de intenção
+        """
+        try:
+            if metadata['tag'] == 'cardapio':
+                # Para cardápio, tentar obter link dinâmico
+                dynamic_link = self.get_dynamic_link(metadata['link'])
+                
+                if dynamic_link and dynamic_link != metadata['link']:
+                    # Link dinâmico obtido com sucesso
+                    response += f"""
+                    <div class="cardapio-container">
+                        <div class="cardapio-header">
+                            <h3>📍 Cardápio do Restaurante IFRS</h3>
+                            <p>Confira as opções de hoje:</p>
+                        </div>
+                        <div class="cardapio-image-wrapper">
+                            <img src='{dynamic_link}' alt='Cardápio do dia' class='cardapio-image' onclick='openCardapioModal(this)' onerror='this.style.display="none"; this.parentElement.innerHTML="<p style=\"text-align: center; padding: 20px; color: #666;\">Imagem do cardápio não disponível no momento</p>";'>
+                            <div class="cardapio-overlay">
+                                <span>Clique para ampliar</span>
+                            </div>
+                        </div>
+                        <div class="cardapio-actions">
+                            <a href='https://ifrs.edu.br/sertao/assistencia-estudantil/restaurante/cardapio/' target='_blank' class='cardapio-link'>
+                                🔗 Ver no site oficial
+                            </a>
+                        </div>
+                    </div>
+                    """
+                else:
+                    # Fallback quando não conseguir obter o link dinâmico
+                    response += f"""
+                    <div class="cardapio-container">
+                        <div class="cardapio-header">
+                            <h3>📍 Cardápio do Restaurante IFRS</h3>
+                            <p>Informações sobre o cardápio:</p>
+                        </div>
+                        <div class="cardapio-fallback">
+                            <p>🍽️ O cardápio não está disponível para visualização no momento.</p>
+                            <p>Você pode consultar diretamente no site oficial ou comparecer ao restaurante.</p>
+                        </div>
+                        <div class="cardapio-actions">
+                            <a href='https://ifrs.edu.br/sertao/assistencia-estudantil/restaurante/cardapio/' target='_blank' class='cardapio-link'>
+                                🔗 Ver no site oficial
+                            </a>
+                        </div>
+                    </div>
+                    """
+            else:
+                # Para outros links estáticos
+                response += f" {metadata['link']}"
+            
+            return response
+        except Exception as e:
+            logger.error(f"Erro ao adicionar link: {str(e)}")
+            return response
 
 # Função de compatibilidade com o código existente
 def get_response(msg):

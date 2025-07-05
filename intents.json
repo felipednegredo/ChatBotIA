@@ -286,17 +286,15 @@
         "Posso acessar artigos acadêmicos e e-books online na biblioteca virtual?",
         "Biblioteca virtual acesso",
         "Acessar o Pergamum",
-        "Pergamun reservar livros",
+        "Pergamum reservar livros",
         "Consultar acervo de livros",
         "fazer reserva de livros",
         "ver livros da biblioteca",
-        "quais os livros disponiveis virtualmente",
+        "quais os livros disponíveis virtualmente",
         "livros da biblioteca Pergamum",
         "pergamum",
         "pergamum biblioteca",
         "acesso biblioteca pergamum"
-
-
       ],
       "responses": ["Você pode acessar a biblioteca virtual &#128214 <strong>Pergamum</strong através do seguinte link. Basta fazer login com suas credenciais de aluno.<br><br>"],
       "link": "<a target='_blank' href='https://biblioteca.ifrs.edu.br/pergamum_ifrs/biblioteca/index.php'>Acesse a biblioteca Pergamum!</a>"
@@ -307,25 +305,24 @@
         "Quanto tempo posso ficar com os livros?",
         "Tempo para devolver os livros?",
         "Quando devolver livros?",
-        "Tempo de devolver livros?",
         "Ficar quanto tempo com o livro?",
         "tempo para renovar livros",
         "renovar livros",
         "renovação dos livros",
         "livros para renovar",
         "prazo renovar",
-        "prazo para renovar livros"
-
+        "prazo para renovar livros",
+        "prazo para devolver livros",
+        "prazo livro",
+        "tempo com livros"
       ],
       "responses": ["O período de reserva é de até <strong>sete dias</strong> e pode ser renovado até dez vezes &#128214.</br> OBS:Lembrando que os empréstimos e renovações só serão possíveis se o leitor estiver regularizado junto a Biblioteca."]
-
     },
     {
       "tag": "devolver_livros",
       "patterns": [
         "devolução de livros",
         "livros para devolvução",
-        "tempo com livros",
         "livros para serem devolvidos",
         "entregar livros",
         "livros devolta para a biblioteca",
@@ -334,13 +331,9 @@
         "Devolver livros",
         "Não devolvi o livro",
         "Multa de atraso devolução",
-        "Devolução de livros",
-        "prazo para devolver livros",
-        "prazo livro",
         "Esqueci de devolver os livros, e agora?"
       ],
       "responses": ["Você deve devolver o livro à biblioteca o mais breve possível &#128217, pois a multa é no valor de <strong>R$ 1,00 (um real)</strong> por dia de atraso."]
-
     },
     {
       "tag": "tipos_auxilio",
@@ -358,9 +351,6 @@
         "quero receber auxilio estudantil",
         "quais os possiveis auxílios estudantis",
         "quero o saber quais os tipos de auxilio"
-
-
-
       ],
       "responses": ["Os tipos de auxílios estudantis são: <strong>Auxílio Permanência</strong> e <strong>Auxílio Moradia</strong>.</br> Seus objetivos são subsidiar as despesas dos estudantes beneficiários do auxílio […], com vistas a ampliar suas condições de permanência e êxito acadêmico.</br>"],
       "link": "<a target='_blank' href='https://ifrs.edu.br/sertao/assistencia-estudantil/programa-de-beneficios/sobre-os-auxilios-estudantis/'>Mais informações!</a>"

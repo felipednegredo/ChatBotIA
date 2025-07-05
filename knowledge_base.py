@@ -4,10 +4,20 @@ from chromadb.utils import embedding_functions
 from sentence_transformers import SentenceTransformer
 import os
 import logging
+import warnings
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Suprimir warnings desnecessários do ChromaDB
+warnings.filterwarnings("ignore", category=UserWarning, module="chromadb")
+warnings.filterwarnings("ignore", category=FutureWarning, module="chromadb")
+
+# Configurar logging do ChromaDB para reduzir mensagens desnecessárias
+logging.getLogger("chromadb").setLevel(logging.WARNING)
+logging.getLogger("chromadb.telemetry").setLevel(logging.ERROR)
+logging.getLogger("sentence_transformers").setLevel(logging.WARNING)
 
 class KnowledgeBase:
     def __init__(self, persist_directory="./chroma_db"):
@@ -16,8 +26,14 @@ class KnowledgeBase:
         """
         self.persist_directory = persist_directory
         
-        # Configurar ChromaDB com persistência
-        self.client = chromadb.PersistentClient(path=persist_directory)
+        # Configurar ChromaDB com persistência e telemetria desabilitada
+        self.client = chromadb.PersistentClient(
+            path=persist_directory,
+            settings=chromadb.Settings(
+                anonymized_telemetry=False,
+                allow_reset=True
+            )
+        )
         
         # Inicializar o modelo de embeddings usando ChromaDB embedding function
         self.embedding_function = embedding_functions.SentenceTransformerEmbeddingFunction(
@@ -182,6 +198,54 @@ class KnowledgeBase:
             logger.info("Coleção resetada com sucesso!")
         except Exception as e:
             logger.error(f"Erro ao resetar coleção: {str(e)}")
+    
+    def get_all_intents(self):
+        """
+        Retorna todas as intenções da base de conhecimento
+        """
+        try:
+            # Obter todos os documentos da coleção
+            results = self.collection.get(
+                include=['metadatas']
+            )
+            
+            all_intents = []
+            seen_tags = set()
+            
+            for metadata in results['metadatas']:
+                tag = metadata['tag']
+                if tag not in seen_tags:
+                    seen_tags.add(tag)
+                    
+                    # Decodificar padrões do JSON
+                    patterns = json.loads(metadata['patterns'])
+                    
+                    intent_data = {
+                        'tag': tag,
+                        'patterns': patterns,
+                        'responses': json.loads(metadata['responses'])
+                    }
+                    
+                    all_intents.append(intent_data)
+            
+            logger.info(f"Retornadas {len(all_intents)} intenções da base de conhecimento")
+            return all_intents
+            
+        except Exception as e:
+            logger.error(f"Erro ao obter todas as intenções: {str(e)}")
+            return []
+
+    def get_intents_from_json(self, json_file_path='intents.json'):
+        """
+        Carrega intenções diretamente do arquivo JSON (alternativa rápida)
+        """
+        try:
+            with open(json_file_path, 'r', encoding='utf-8') as file:
+                data = json.load(file)
+                return data.get('intents', [])
+        except Exception as e:
+            logger.error(f"Erro ao carregar intenções do JSON: {str(e)}")
+            return []
 
 if __name__ == "__main__":
     # Teste da classe
