@@ -101,9 +101,8 @@ Bot IFRS: Aqui está o cardápio de hoje: [imagem do cardápio]
 ChatBotIA/
 ├── 🧠 knowledge_base.py      # Gerenciamento ChromaDB
 ├── 💬 chat.py                # Sistema de chat semântico  
-├── ⚙️ setup_semantic.py      # Script de configuração
 ├── 🌐 app.py                 # API Flask
-├── � requirements.txt       # Dependências
+├── 📦 requirements.txt       # Dependências
 ├── 📝 intents.json           # Base de conhecimento
 ├── 🎨 static/                # Arquivos estáticos
 ├── 🌐 templates/             # Templates HTML
