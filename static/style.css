@@ -41,8 +41,8 @@ body {
     display: flex;
     flex-direction: column;
     background: white;
-    width: 350px;
-    height: 480px;
+    width: 420px;
+    height: 580px;
     border-radius: 15px;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
     z-index: -1;
@@ -268,7 +268,7 @@ a:focus {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    max-height: 320px;
+    max-height: 420px;
     justify-content: flex-start;
 }
 
@@ -797,8 +797,8 @@ a:focus {
     }
     
     .chatbox__support {
-        width: 280px;
-        height: 400px;
+        width: 320px;
+        height: 480px;
     }
 }
 
@@ -821,8 +821,8 @@ a:focus {
     }
     
     .chatbox__support {
-        width: 250px;
-        height: 350px;
+        width: 280px;
+        height: 420px;
     }
 }
 
