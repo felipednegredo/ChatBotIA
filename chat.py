@@ -59,9 +59,7 @@ class ShortTermMemory:
                 intent_tag=intent_tag,
                 similarity_score=similarity_score
             )
-
-            print(f"Adicionando turno: {turn}")
-            
+                        
             self.turns.append(turn)
             
             # Manter apenas os últimos N turnos
