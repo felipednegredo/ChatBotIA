@@ -7,7 +7,7 @@ Este chatbot utiliza tecnologias modernas de busca semântica com **ChromaDB** e
 ### 🛠️ Tecnologias Utilizadas
 
 **Backend:**
-- Python 3.8+
+- Python 3.12.10+
 - Flask (API Web)
 - ChromaDB (Base de dados vetorial)
 - Sentence-Transformers (Embeddings)
