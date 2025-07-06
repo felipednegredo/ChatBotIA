@@ -23,13 +23,7 @@ Este chatbot utiliza tecnologias modernas de busca semântica com **ChromaDB** e
 
 ## 📦 Instalação e Configuração
 
-### 1. Instalação Automática (Recomendado)
-```bash
-# Execute o script de configuração
-python setup_semantic.py
-```
-
-### 2. Instalação Manual
+### 1. Instalação Manual
 ```bash
 # Instalar dependências
 pip install -r requirements.txt
