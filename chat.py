@@ -412,17 +412,18 @@ class SemanticChatBot:
     
     def _select_response_avoiding_duplicates(self, responses, intent_tag, threshold=0.85):
         """
-        Seleciona resposta evitando duplicatas com threshold mais relaxado
+        Seleciona resposta evitando duplicatas com threshold mais relaxado.
+        Agora seleciona a última resposta da lista como padrão.
         """
-        # Tentar primeiro uma resposta aleatória
-        potential_response = random.choice(responses)
+        # Tentar primeiro a última resposta da lista
+        potential_response = responses[-1] if responses else ""
         
         # Verificar duplicata apenas se for muito similar (threshold mais alto)
         if not self.short_term_memory.is_duplicate_response(potential_response, intent_tag, threshold):
             return potential_response
         
-        # Se for duplicata, tentar outras respostas
-        for response in responses:
+        # Se for duplicata, tentar outras respostas (do fim para o início)
+        for response in reversed(responses):
             if not self.short_term_memory.is_duplicate_response(response, intent_tag, threshold):
                 return response
         
@@ -433,31 +434,8 @@ class SemanticChatBot:
             "Conforme informado: "
         ]
         
-        return random.choice(variation_prefixes) + potential_response
-
-    def _build_context_message(self, current_message, conversation_history):
-        """
-        Constrói uma mensagem combinando o contexto da conversa com a mensagem atual
-        """
-        if not conversation_history:
-            return self.normalize_text(current_message)
-        
-        # Extrair apenas as mensagens de texto das últimas interações
-        context_parts = []
-        for msg in conversation_history[-5:]:  # Últimas 5 mensagens
-            if msg['type'] == 'user':
-                context_parts.append(f"Usuário anterior: {msg['message']}")
-            elif msg['type'] == 'bot':
-                # Remover tags HTML da resposta do bot para contexto
-                clean_response = self._clean_html_tags(msg['message'])
-                context_parts.append(f"Bot anterior: {clean_response}")
-        
-        # Combinar contexto com mensagem atual
-        context_text = " ".join(context_parts)
-        full_message = f"{context_text} Pergunta atual: {current_message}"
-        
-        return self.normalize_text(full_message)
-
+        return variation_prefixes[0] + potential_response
+    
     def _clean_html_tags(self, text):
         """
         Remove tags HTML básicas do texto
