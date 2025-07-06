@@ -1387,6 +1387,8 @@ class SemanticChatBot:
                         </div>
                         <div class="cardapio-image-wrapper">
                             <img src='{dynamic_link}' alt='Cardápio do dia' class='cardapio-image' onclick='openCardapioModal(this)' onerror='this.style.display="none"; this.parentElement.innerHTML="<p style=\"text-align: center; padding: 20px; color: #666;\">Imagem do cardápio não disponível no momento</p>";'>
+                                <a href='{dynamic_link}' target='_blank' class='cardapio-link'>Ver imagem completa</a>
+                            <img>
                             <div class="cardapio-overlay">
                                 <span>Clique para ampliar</span>
                             </div>
