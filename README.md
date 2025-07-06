@@ -147,7 +147,7 @@ python -c "from sentence_transformers import SentenceTransformer; SentenceTransf
 
 ### Base de Dados Corrompida
 ```bash
-python clean_database.py
+python reset_chromadb.py
 ```
 
 ## 🤝 Contribuições
