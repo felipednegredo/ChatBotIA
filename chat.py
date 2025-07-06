@@ -59,6 +59,8 @@ class ShortTermMemory:
                 intent_tag=intent_tag,
                 similarity_score=similarity_score
             )
+
+            print(f"Adicionando turno: {turn}")
             
             self.turns.append(turn)
             
@@ -71,76 +73,100 @@ class ShortTermMemory:
         except Exception as e:
             logger.error(f"Erro ao adicionar turno à memória: {str(e)}")
     
-    def get_relevant_context(self, current_message: str, max_relevant: int = 3) -> List[ConversationTurn]:
-        """Busca turnos relevantes baseado na similaridade vetorial"""
+    def get_relevant_context(self, current_message: str, max_relevant: int = 1) -> List[ConversationTurn]:
+        """Busca apenas o último turno relevante, ignorando tags básicas de saudação"""
         if not self.turns:
             return []
         
         try:
+            # Tags que devem ser ignoradas no contexto
+            ignore_tags = {'oi', 'tchau', 'Obrigado'}
+            
+            # Filtrar turnos ignorando tags básicas
+            filtered_turns = []
+            for turn in self.turns:
+                if turn.intent_tag and turn.intent_tag not in ignore_tags:
+                    filtered_turns.append(turn)
+            
+            # Se não há turnos filtrados, retornar vazio
+            if not filtered_turns:
+                return []
+            
+            # Pegar apenas o último turno válido
+            last_turn = filtered_turns[-1]
+            
             # Gerar embedding da mensagem atual sem progresso
             current_embedding = self.embedding_model.encode(current_message, show_progress_bar=False)
             
-            # Calcular similaridades
-            similarities = []
-            for turn in self.turns:
-                # Calcular similaridade com a mensagem do usuário anterior
-                user_similarity = self._cosine_similarity(current_embedding, turn.user_embedding)
-                # Calcular similaridade com o contexto completo
-                context_similarity = self._cosine_similarity(current_embedding, turn.combined_embedding)
-                
-                # Usar a maior similaridade
-                max_similarity = max(user_similarity, context_similarity)
-                similarities.append((turn, max_similarity))
+            # Calcular similaridade apenas com o último turno
+            user_similarity = self._cosine_similarity(current_embedding, last_turn.user_embedding)
+            context_similarity = self._cosine_similarity(current_embedding, last_turn.combined_embedding)
             
-            # Ordenar por similaridade e retornar os mais relevantes
-            similarities.sort(key=lambda x: x[1], reverse=True)
+            # Usar a maior similaridade
+            max_similarity = max(user_similarity, context_similarity)
             
-            # Filtrar por threshold de relevância
-            relevant_turns = []
-            for turn, similarity in similarities:
-                if similarity > 0.3 and len(relevant_turns) < max_relevant:  # Threshold de relevância
-                    relevant_turns.append(turn)
+            # Retornar apenas se a similaridade for significativa
+            if max_similarity > 0.3:
+                logger.info(f"Contexto relevante encontrado: '{last_turn.user_message}' (similaridade: {max_similarity:.2f})")
+                return [last_turn]
             
-            logger.info(f"Encontrados {len(relevant_turns)} turnos relevantes para: '{current_message}'")
-            return relevant_turns
+            logger.info(f"Nenhum contexto relevante encontrado para: '{current_message}'")
+            return []
             
         except Exception as e:
             logger.error(f"Erro ao buscar contexto relevante: {str(e)}")
             return []
     
-    def get_recent_context_text(self, max_turns: int = 3) -> str:
-        """Retorna texto do contexto recente para injeção no prompt"""
-        recent_turns = self.turns[-max_turns:] if self.turns else []
-        
-        if not recent_turns:
+    def get_recent_context_text(self, max_turns: int = 1) -> str:
+        """Retorna texto apenas da última mensagem de contexto, ignorando tags básicas"""
+        if not self.turns:
             return ""
         
-        context_parts = []
-        for turn in recent_turns:
-            context_parts.append(f"Usuário anterior: {turn.user_message}")
-            context_parts.append(f"Bot anterior: {turn.bot_response}")
+        # Tags que devem ser ignoradas no contexto
+        ignore_tags = {'oi', 'tchau', 'Obrigado'}
         
-        return " ".join(context_parts)
+        # Filtrar turnos ignorando tags básicas
+        filtered_turns = []
+        for turn in self.turns:
+            if turn.intent_tag and turn.intent_tag not in ignore_tags:
+                filtered_turns.append(turn)
+        
+        # Pegar apenas o último turno válido
+        if filtered_turns:
+            last_turn = filtered_turns[-1]
+            return f"Usuário anterior: {last_turn.user_message} Bot anterior: {last_turn.bot_response}"
+        
+        return ""
     
     def get_contextual_keywords(self, current_message: str) -> List[str]:
-        """Extrai palavras-chave relevantes do contexto"""
-        relevant_turns = self.get_relevant_context(current_message, max_relevant=2)
+        """Extrai palavras-chave relevantes do último contexto, ignorando tags básicas"""
+        # Tags que devem ser ignoradas no contexto
+        ignore_tags = {'oi', 'tchau', 'Obrigado'}
+        
+        # Filtrar turnos ignorando tags básicas
+        filtered_turns = []
+        for turn in self.turns:
+            if turn.intent_tag and turn.intent_tag not in ignore_tags:
+                filtered_turns.append(turn)
         
         keywords = []
-        for turn in relevant_turns:
+        if filtered_turns:
+            # Pegar apenas o último turno válido
+            last_turn = filtered_turns[-1]
+            
             # Extrair palavras importantes da mensagem do usuário
-            user_words = turn.user_message.lower().split()
+            user_words = last_turn.user_message.lower().split()
             important_words = [w for w in user_words if len(w) > 3 and w not in 
                              ['para', 'como', 'onde', 'quando', 'porque', 'qual', 'quem', 'que', 'isso', 'esta', 'esse']]
-            keywords.extend(important_words[:2])  # Máximo 2 palavras por turno
+            keywords.extend(important_words[:2])  # Máximo 2 palavras
             
             # Adicionar intent_tag se disponível
-            if turn.intent_tag:
-                tag_words = turn.intent_tag.replace('_', ' ').split()
+            if last_turn.intent_tag:
+                tag_words = last_turn.intent_tag.replace('_', ' ').split()
                 keywords.extend(tag_words)
         
         # Remover duplicatas e limitar
-        return list(set(keywords))[:5]
+        return list(set(keywords))[:3]
     
     def _cosine_similarity(self, a, b):
         """Calcula similaridade do cosseno entre dois vetores"""
@@ -271,8 +297,8 @@ class SemanticChatBot:
                     return option_response
             
             # 2. BUSCA PRINCIPAL COM CONTEXTO OTIMIZADO
-            # Usar memória de curto prazo para enriquecer moderadamente
-            relevant_memory = self.short_term_memory.get_relevant_context(user_message, max_relevant=2)
+            # Usar memória de curto prazo para enriquecer moderadamente (apenas último contexto)
+            relevant_memory = self.short_term_memory.get_relevant_context(user_message, max_relevant=1)
             
             # Criar query enriquecida de forma mais seletiva
             search_query = self._create_optimized_query(normalized_message, relevant_memory, conversation_history)
@@ -319,29 +345,33 @@ class SemanticChatBot:
     
     def _create_optimized_query(self, message, relevant_memory, conversation_history):
         """
-        Cria query otimizada sem sobrecarregar com palavras-chave desnecessárias
+        Cria query otimizada usando apenas o último contexto relevante, ignorando tags básicas
         """
+        # Tags que devem ser ignoradas no contexto
+        ignore_tags = {'oi', 'tchau', 'Obrigado'}
+        
         # Se não há contexto relevante, retornar mensagem original
         if not relevant_memory and not conversation_history:
             return message
         
-        # Adicionar apenas 1-2 palavras-chave mais relevantes da memória
+        # Adicionar apenas 1 palavra-chave mais relevante da memória
         context_words = []
         if relevant_memory:
-            for turn in relevant_memory[:1]:  # Apenas o turno mais relevante
-                if turn.intent_tag:
-                    # Pegar apenas a palavra principal da tag
-                    tag_words = turn.intent_tag.replace('_', ' ').split()
-                    if tag_words:
-                        context_words.append(tag_words[0])
+            # Pegar apenas o último turno relevante
+            last_turn = relevant_memory[0]
+            if last_turn.intent_tag and last_turn.intent_tag not in ignore_tags:
+                # Pegar apenas a palavra principal da tag
+                tag_words = last_turn.intent_tag.replace('_', ' ').split()
+                if tag_words:
+                    context_words.append(tag_words[0])
         
         # Adicionar contexto da conversa atual se relevante
         if conversation_history:
             recent_context = self._get_recent_context_keywords(conversation_history, max_words=1)
             context_words.extend(recent_context)
         
-        # Limitar a 2 palavras adicionais para não sobrecarregar
-        context_words = list(set(context_words))[:2]
+        # Limitar a apenas 1 palavra adicional para não sobrecarregar
+        context_words = list(set(context_words))[:1]
         
         if context_words:
             enriched_query = f"{message} {' '.join(context_words)}"
@@ -350,23 +380,29 @@ class SemanticChatBot:
         
         return message
     
-    def _get_recent_context_keywords(self, conversation_history, max_words=2):
+    def _get_recent_context_keywords(self, conversation_history, max_words=1):
         """
-        Extrai palavras-chave relevantes do contexto recente de forma otimizada
+        Extrai palavras-chave relevantes do contexto recente, ignorando tags básicas
         """
         if not conversation_history:
             return []
         
-        keywords = []
-        # Analisar apenas as últimas 2 mensagens do usuário
-        user_messages = [msg for msg in conversation_history[-4:] if msg['type'] == 'user'][-2:]
+        # Tags que devem ser ignoradas no contexto
+        ignore_tags = {'oi', 'tchau', 'Obrigado'}
         
-        for msg in user_messages:
-            words = msg['message'].lower().split()
+        keywords = []
+        # Analisar apenas a última mensagem do usuário
+        user_messages = [msg for msg in conversation_history if msg['type'] == 'user']
+        
+        if user_messages:
+            last_msg = user_messages[-1]
+            words = last_msg['message'].lower().split()
+            
             # Filtrar palavras relevantes (substantivos importantes)
             relevant_words = [w for w in words if len(w) > 3 and w not in 
                             ['para', 'como', 'onde', 'quando', 'porque', 'qual', 'quem', 'que', 
-                             'isso', 'esta', 'esse', 'quero', 'preciso', 'gostaria', 'pode', 'voce']]
+                             'isso', 'esta', 'esse', 'quero', 'preciso', 'gostaria', 'pode', 'voce',
+                             'obrigado', 'tchau', 'oi', 'olá', 'hey', 'valeu']]
             
             if relevant_words:
                 keywords.append(relevant_words[0])  # Apenas a primeira palavra relevante
@@ -1156,62 +1192,6 @@ class SemanticChatBot:
         
         return summary
 
-    def _analyze_contextual_intent(self, current_message, conversation_history):
-        """
-        Analisa o contexto da conversa para identificar intenções relacionadas dinamicamente
-        baseando-se nos padrões das intenções carregadas do intents.json
-        """
-        if not conversation_history:
-            return current_message
-        
-        try:
-            # Obter todas as intenções da base de conhecimento (carregamento eficiente do JSON)
-            all_intents = self.knowledge_base.get_intents_from_json(self.intents_file)
-            
-            # Analisar as últimas 3 mensagens do usuário
-            user_messages = [msg['message'].lower() for msg in conversation_history[-3:] if msg['type'] == 'user']
-            current_lower = current_message.lower()
-            
-            # Buscar padrões contextuais dinâmicos
-            for intent_data in all_intents:
-                tag = intent_data['tag']
-                patterns = [p.lower() for p in intent_data.get('patterns', [])]
-                
-                # Verificar se alguma mensagem anterior corresponde a padrões desta intenção
-                previous_intent_match = any(
-                    any(self._contains_pattern_words(msg, pattern) for pattern in patterns)
-                    for msg in user_messages
-                )
-                
-                if previous_intent_match:
-                    # Verificar se a mensagem atual pode ser uma continuação contextual
-                    enhanced_query = self._build_contextual_query(current_message, tag, intent_data)
-                    if enhanced_query and enhanced_query != current_message:
-                        logger.info(f"Contexto dinâmico detectado: '{tag}' + '{current_message}' -> '{enhanced_query}'")
-                        return enhanced_query
-            
-            # Verificar o contexto inverso - mensagem atual pode ser uma intenção, e anterior pode ser contexto
-            current_intent_matches = []
-            for intent_data in all_intents:
-                tag = intent_data['tag']
-                patterns = [p.lower() for p in intent_data.get('patterns', [])]
-                
-                if any(self._contains_pattern_words(current_lower, pattern) for pattern in patterns):
-                    current_intent_matches.append(intent_data)
-            
-            # Para cada intenção que corresponde à mensagem atual, verificar contexto anterior
-            for current_intent in current_intent_matches:
-                enhanced_query = self._build_reverse_contextual_query(current_message, current_intent, user_messages, all_intents)
-                if enhanced_query and enhanced_query != current_message:
-                    logger.info(f"Contexto inverso dinâmico detectado: mensagens anteriores + '{current_message}' -> '{enhanced_query}'")
-                    return enhanced_query
-            
-            return current_message
-            
-        except Exception as e:
-            logger.error(f"Erro na análise contextual dinâmica: {str(e)}")
-            return current_message
-    
     def _contains_pattern_words(self, message, pattern):
         """
         Verifica se a mensagem contém palavras-chave significativas do padrão
